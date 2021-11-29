@@ -48,7 +48,7 @@ func Get() (*Config, error) {
 		GracefulShutdownTimeout:    5 * time.Second,
 		HealthCheckInterval:        30 * time.Second,
 		HealthCheckCriticalTimeout: 90 * time.Second,
-		KafkaAddr:                  []string{"localhost:9092"},
+		KafkaAddr:                  []string{"localhost:39092"},
 		KafkaVersion:               "1.0.2",
 		KafkaOffsetOldest:          true,
 		KafkaNumWorkers:            1,

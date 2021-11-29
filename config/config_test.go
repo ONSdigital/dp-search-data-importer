@@ -25,7 +25,7 @@ func TestConfig(t *testing.T) {
 				So(cfg.HealthCheckInterval, ShouldEqual, 30*time.Second)
 				So(cfg.HealthCheckCriticalTimeout, ShouldEqual, 90*time.Second)
 				So(cfg.KafkaAddr, ShouldHaveLength, 1)
-				So(cfg.KafkaAddr[0], ShouldEqual, "localhost:9092")
+				So(cfg.KafkaAddr[0], ShouldEqual, "localhost:39092")
 				So(cfg.KafkaVersion, ShouldEqual, "1.0.2")
 				So(cfg.KafkaNumWorkers, ShouldEqual, 1)
 				So(cfg.KafkaSecProtocol, ShouldEqual, "")
