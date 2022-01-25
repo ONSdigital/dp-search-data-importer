@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"sync"
 	"testing"
@@ -52,9 +52,7 @@ var (
 	emptyListOfPathsWithNoRetries = func() []string {
 		return []string{}
 	}
-	setListOfPathsWithNoRetries = func(listOfPaths []string) {
-		return
-	}
+	setListOfPathsWithNoRetries = func(listOfPaths []string) {}
 
 	doFuncWithValidResponse = func(ctx context.Context, req *http.Request) (*http.Response, error) {
 		return successESResponse(), nil
@@ -65,7 +63,7 @@ func successESResponse() *http.Response {
 
 	return &http.Response{
 		StatusCode: 201,
-		Body:       ioutil.NopCloser(bytes.NewBufferString(`Created`)),
+		Body:       io.NopCloser(bytes.NewBufferString(`Created`)),
 		Header:     make(http.Header),
 	}
 }

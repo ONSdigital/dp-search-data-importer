@@ -14,7 +14,6 @@ import (
 var ctx = context.Background()
 
 func TestIsEmpty(t *testing.T) {
-
 	Convey("Given a batch", t, func() {
 
 		expectedEvent := getExpectedEvent()
@@ -31,9 +30,13 @@ func TestIsEmpty(t *testing.T) {
 
 		Convey("When the batch has a message added", func() {
 
-			batch.Add(ctx, message)
+			err := batch.Add(ctx, message)
 			Convey("Then the batch is not empty", func() {
 				So(batch.IsEmpty(), ShouldBeFalse)
+
+				Convey("And no error is returned", func() {
+					So(err, ShouldBeNil)
+				})
 			})
 		})
 	})
@@ -51,7 +54,8 @@ func TestAdd(t *testing.T) {
 
 		Convey("When add is called with a valid message", func() {
 
-			batch.Add(ctx, message)
+			err := batch.Add(ctx, message)
+			So(err, ShouldBeNil)
 
 			Convey("Then the batch contains the expected event.", func() {
 				So(batch.Size(), ShouldEqual, 1)
@@ -71,7 +75,8 @@ func TestCommitWithOneMessage(t *testing.T) {
 		batchSize := 1
 		batch := event.NewBatch(batchSize)
 
-		batch.Add(ctx, message1)
+		err := batch.Add(ctx, message1)
+		So(err, ShouldBeNil)
 
 		Convey("When commit is called", func() {
 
@@ -102,8 +107,10 @@ func TestCommitWithTwoMessage(t *testing.T) {
 		batchSize := 2
 		batch := event.NewBatch(batchSize)
 
-		batch.Add(ctx, message1)
-		batch.Add(ctx, message2)
+		err := batch.Add(ctx, message1)
+		So(err, ShouldBeNil)
+		err2 := batch.Add(ctx, message2)
+		So(err2, ShouldBeNil)
 
 		Convey("When commit is called", func() {
 
@@ -123,7 +130,8 @@ func TestCommitWithTwoMessage(t *testing.T) {
 			})
 
 			Convey("And the batch can be reused", func() {
-				batch.Add(ctx, message1)
+				err1 := batch.Add(ctx, message1)
+				So(err1, ShouldBeNil)
 
 				So(batch.IsEmpty(), ShouldBeFalse)
 				So(batch.IsFull(), ShouldBeFalse)
@@ -131,8 +139,8 @@ func TestCommitWithTwoMessage(t *testing.T) {
 
 				So(batch.Events()[0].DataType, ShouldEqual, expectedEvent.DataType)
 
-				batch.Add(ctx, message2)
-
+				err2 := batch.Add(ctx, message2)
+				So(err2, ShouldBeNil)
 				So(batch.IsEmpty(), ShouldBeFalse)
 				So(batch.IsFull(), ShouldBeTrue)
 				So(batch.Size(), ShouldEqual, 2)
@@ -157,11 +165,13 @@ func TestSize(t *testing.T) {
 
 		Convey("When add is called with a valid message", func() {
 
-			batch.Add(ctx, message)
+			err := batch.Add(ctx, message)
+			So(err, ShouldBeNil)
 
 			Convey("Then the batch size should increase.", func() {
 				So(batch.Size(), ShouldEqual, 1)
-				batch.Add(ctx, message)
+				err = batch.Add(ctx, message)
+				So(err, ShouldBeNil)
 				So(batch.Size(), ShouldEqual, 2)
 			})
 		})
@@ -182,9 +192,12 @@ func TestIsFull(t *testing.T) {
 
 		Convey("When the number of messages added equals the batch size", func() {
 
-			batch.Add(ctx, message)
+			err1 := batch.Add(ctx, message)
+			So(err1, ShouldBeNil)
 			So(batch.IsFull(), ShouldBeFalse)
-			batch.Add(ctx, message)
+
+			err2 := batch.Add(ctx, message)
+			So(err2, ShouldBeNil)
 
 			Convey("Then the batch should be full.", func() {
 				So(batch.IsFull(), ShouldBeTrue)
@@ -202,19 +215,19 @@ func TestToEvent(t *testing.T) {
 
 		Convey("When the expectedEvent is unmarshalled", func() {
 
-			event, err := event.Unmarshal(message)
+			testEvent, err := event.Unmarshal(message)
 
 			Convey("Then the expectedEvent has the expected values", func() {
 				So(err, ShouldBeNil)
-				So(event.DataType, ShouldEqual, expectedEvent.DataType)
+				So(testEvent.DataType, ShouldEqual, expectedEvent.DataType)
 			})
 		})
 	})
 }
 
 // Marshal helper method to marshal a event into a []byte
-func marshal(event models.SearchDataImportModel) []byte {
-	bytes, err := schema.SearchDataImportEvent.Marshal(event)
+func marshal(smEvent models.SearchDataImportModel) []byte {
+	bytes, err := schema.SearchDataImportEvent.Marshal(smEvent)
 	So(err, ShouldBeNil)
 	return bytes
 }

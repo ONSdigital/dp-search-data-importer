@@ -19,15 +19,12 @@ type Component struct {
 	componenttest.ErrorFeature
 	serviceList   *service.ExternalServiceList
 	KafkaConsumer kafka.IConsumerGroup
-	killChannel   chan os.Signal
-	apiFeature    *componenttest.APIFeature
 	errorChan     chan error
 	svc           *service.Service
 	cfg           *config.Config
 }
 
 func NewComponent() *Component {
-
 	c := &Component{errorChan: make(chan error)}
 
 	consumer := kafkatest.NewMessageConsumer(false)
@@ -60,7 +57,7 @@ func (c *Component) Reset() {
 	os.Remove(outputFilePath)
 }
 
-func (c *Component) DoGetHealthCheck(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
+func (c *Component) DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, version string) (service.HealthChecker, error) {
 	return &mock.HealthCheckerMock{
 		AddCheckFunc: func(name string, checker healthcheck.Checker) error { return nil },
 		StartFunc:    func(ctx context.Context) {},
