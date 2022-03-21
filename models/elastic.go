@@ -2,7 +2,6 @@ package models
 
 // EsModel holds an individual content data
 type EsModel struct {
-	UID             string   `json:"uid"`
 	DataType        string   `json:"type"`
 	JobID           string   `json:"job_id"`
 	SearchIndex     string   `json:"search_index"`
@@ -13,6 +12,7 @@ type EsModel struct {
 	ReleaseDate     string   `json:"release_date,omitempty"`
 	Summary         string   `json:"summary"`
 	Title           string   `json:"title"`
+	Topics          []string `json:"topics"`
 }
 
 // EsBulkResponse holds a response from ES

@@ -78,6 +78,11 @@ func main() {
 func scanEvent(scanner *bufio.Scanner) *models.SearchDataImportModel {
 	fmt.Println("--- [Send Kafka PublishedContent] ---")
 
+	fmt.Println("Type the UID")
+	fmt.Printf("$ ")
+	scanner.Scan()
+	uid := scanner.Text()
+
 	fmt.Println("Type the Data Type")
 	fmt.Printf("$ ")
 	scanner.Scan()
@@ -109,6 +114,7 @@ func scanEvent(scanner *bufio.Scanner) *models.SearchDataImportModel {
 	title := scanner.Text()
 
 	return &models.SearchDataImportModel{
+		UID:         uid,
 		DataType:    dataType,
 		JobID:       jobID,
 		SearchIndex: "ONS",
@@ -118,5 +124,6 @@ func scanEvent(scanner *bufio.Scanner) *models.SearchDataImportModel {
 		Summary:     summary,
 		ReleaseDate: "2017-09-07",
 		Title:       title,
+		TraceID:     "2effer334d",
 	}
 }
