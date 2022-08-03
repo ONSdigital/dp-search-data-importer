@@ -131,12 +131,12 @@ func (e *Init) DoGetElasticSearchClient(ctx context.Context, cfg *config.Config)
 	esConfig := dpESClient.Config{
 		ClientLib: dpESClient.GoElasticV710,
 		Address:   cfg.ElasticSearchAPIURL,
+		Transport: dphttp.DefaultTransport,
 	}
 	if cfg.SignElasticsearchRequests {
 		esConfig.Transport = awsSigner
-	} else {
-		esConfig.Transport = dphttp.DefaultTransport
 	}
+
 	esClient, esClientErr := dpES.NewClient(esConfig)
 	if esClientErr != nil {
 		log.Error(ctx, "Failed to create dp-elasticsearch client", esClientErr)
