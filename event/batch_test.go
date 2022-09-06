@@ -146,6 +146,15 @@ func TestSize(t *testing.T) {
 	})
 }
 
+func TestCreateBatchID(t *testing.T) {
+	Convey("Create a batch id", t, func() {
+		batch := event.NewBatch(1)
+		batch.CreateID()
+
+		So(batch.ID(), ShouldNotBeEmpty)
+	})
+}
+
 func TestIsFull(t *testing.T) {
 
 	Convey("Given a batch with a size of 2", t, func() {

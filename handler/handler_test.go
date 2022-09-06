@@ -15,6 +15,8 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+const testbatchID = "test_id"
+
 var (
 	testContext = context.Background()
 	esDestURL   = "locahost:9999"
@@ -86,7 +88,7 @@ func TestHandleWithEventsCreated(t *testing.T) {
 		batchHandler := handler.NewBatchHandler(elasticSearchMock)
 
 		Convey("When handle is called", func() {
-			err := batchHandler.Handle(testContext, esDestURL, testEvents)
+			err := batchHandler.Handle(testContext, esDestURL, testbatchID, testEvents)
 
 			Convey("Then the error is nil and it performed upsert action", func() {
 				So(err, ShouldBeNil)
@@ -96,7 +98,6 @@ func TestHandleWithEventsCreated(t *testing.T) {
 }
 
 func TestHandleWithEventsUpdated(t *testing.T) {
-
 	Convey("Given a handler configured with sucessful es updates for two events with one create error", t, func() {
 		elasticSearchMock := &dpMock.ClientMock{
 			BulkUpdateFunc: func(ctx context.Context, indexName string, url string, settings []byte) ([]byte, error) {
@@ -107,7 +108,7 @@ func TestHandleWithEventsUpdated(t *testing.T) {
 		batchHandler := handler.NewBatchHandler(elasticSearchMock)
 
 		Convey("When handle is called", func() {
-			err := batchHandler.Handle(testContext, esDestURL, testEvents)
+			err := batchHandler.Handle(testContext, esDestURL, testbatchID, testEvents)
 
 			Convey("Then the error is nil and it performed upsert action", func() {
 				So(err, ShouldBeNil)
@@ -125,7 +126,7 @@ func TestHandleWithInternalServerESResponse(t *testing.T) {
 		}
 		batchHandler := handler.NewBatchHandler(elasticSearchMock)
 		Convey("When handle is called", func() {
-			err := batchHandler.Handle(testContext, esDestURL, testEvents)
+			err := batchHandler.Handle(testContext, esDestURL, testbatchID, testEvents)
 
 			Convey("And the error is not nil while performing upsert action", func() {
 				So(err, ShouldResemble, errors.New("unexpected status code from api"))

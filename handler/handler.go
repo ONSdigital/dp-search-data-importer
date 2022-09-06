@@ -33,16 +33,20 @@ func NewBatchHandler(esClient dpelasticsearch.Client) *BatchHandler {
 }
 
 // Handle the given slice of SearchDataImport Model.
-func (batchHandler BatchHandler) Handle(ctx context.Context, url string, events []*models.SearchDataImportModel) error {
+func (batchHandler BatchHandler) Handle(ctx context.Context, url string, batchID string, events []*models.SearchDataImportModel) error {
 	// no events received. Nothing more to do.
 	if len(events) == 0 {
-		log.Info(ctx, "there are no events to handle")
+		log.Info(ctx, "there are no events to handle", log.Data{
+			"batch_id": batchID,
+		})
 		return nil
 	}
 
-	err := batchHandler.sendToES(ctx, url, events)
+	err := batchHandler.sendToES(ctx, url, batchID, events)
 	if err != nil {
-		log.Error(ctx, "failed to send event to Elastic Search", err)
+		log.Error(ctx, "failed to send event to Elastic Search", err, log.Data{
+			"batch_id": batchID,
+		})
 		return err
 	}
 
@@ -50,22 +54,27 @@ func (batchHandler BatchHandler) Handle(ctx context.Context, url string, events 
 }
 
 // Preparing the payload and sending bulk events to elastic search.
-func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string, events []*models.SearchDataImportModel) error {
+func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string, batchID string, events []*models.SearchDataImportModel) error {
 
-	log.Info(ctx, "bulk events into ES starts")
+	log.Info(ctx, "bulk events into ES starts", log.Data{
+		"batch_id": batchID,
+	})
 	target := len(events)
 
 	var bulkupsert []byte
 	for _, event := range events {
 		if event.UID == "" {
-			log.Info(ctx, "no uid for inbound kafka event, no transformation possible")
+			log.Info(ctx, "no uid for inbound kafka event, no transformation possible", log.Data{
+				"batch_id": batchID,
+			})
 			continue // break here
 		}
 
 		upsertBulkRequestBody, err := prepareEventForBulkUpsertRequestBody(ctx, event)
 		if err != nil {
 			log.Error(ctx, "error in preparing the bulk for upsert", err, log.Data{
-				"event": *event,
+				"event":    *event,
+				"batch_id": batchID,
 			})
 			continue
 		}
@@ -75,15 +84,21 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 	jsonUpsertResponse, err := batchHandler.esClient.BulkUpdate(ctx, esDestIndex, esDestURL, bulkupsert)
 	if err != nil {
 		if jsonUpsertResponse == nil {
-			log.Error(ctx, "server error while upserting the event", err)
+			log.Error(ctx, "server error while upserting the event", err, log.Data{
+				"batch_id": batchID,
+			})
 			return err
 		}
-		log.Warn(ctx, "error in response from elasticsearch while upserting the event", log.FormatErrors([]error{err}))
+		log.Warn(ctx, "error in response from elasticsearch while upserting the event", log.FormatErrors([]error{err}), log.Data{
+			"batch_id": batchID,
+		})
 	}
 
 	var bulkRes models.EsBulkResponse
 	if err := json.Unmarshal(jsonUpsertResponse, &bulkRes); err != nil {
-		log.Error(ctx, "error unmarshaling json", err)
+		log.Error(ctx, "error unmarshaling json", err, log.Data{
+			"batch_id": batchID,
+		})
 		return err
 	}
 	if bulkRes.Errors {
@@ -95,6 +110,7 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 					log.Data{
 						"response.uid:":   resUpsertItem[esRespCreate].ID,
 						"response status": resUpsertItem[esRespCreate].Status,
+						"batch_id":        batchID,
 					})
 				target--
 				continue
@@ -105,6 +121,7 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 	log.Info(ctx, "documents bulk uploaded to elasticsearch", log.Data{
 		"documents_received": len(events),
 		"documents_inserted": target,
+		"batch_id":           batchID,
 	})
 	return nil
 }

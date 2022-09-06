@@ -34,6 +34,7 @@ func NewConsumer() *Consumer {
 type Handler interface {
 	Handle(ctx context.Context,
 		esDestURL string,
+		batchID string,
 		SearchDataImportModel []*models.SearchDataImportModel) error
 }
 
@@ -85,16 +86,25 @@ func (consumer *Consumer) Consume(
 
 // AddMessageToBatch will attempt to add the message to the batch and determine if it should be processed.
 func AddMessageToBatch(ctx context.Context, cfg *config.Config, batch *Batch, msg kafka.Message, handler Handler) {
-	log.Info(ctx, "add message to batch starts")
+	if batch.Size() == 0 {
+		batch.CreateID()
+	}
+	log.Info(ctx, "add message to batch starts", log.Data{
+		"batch_id": batch.ID(),
+	})
 
 	event, err := Unmarshal(msg)
 	if err != nil {
-		log.Error(ctx, "failed to unmarshal event", err)
+		log.Error(ctx, "failed to unmarshal event", err, log.Data{
+			"batch_id": batch.ID(),
+		})
 		return
 	}
 
 	ctx = dprequest.WithRequestId(ctx, event.TraceID)
-	log.Info(ctx, "event received to be added into the batch")
+	log.Info(ctx, "event received to be added into the batch", log.Data{
+		"batch_id": batch.ID(),
+	})
 
 	batch.messages = append(batch.messages, msg)
 	batch.Add(ctx, event)
@@ -107,14 +117,19 @@ func AddMessageToBatch(ctx context.Context, cfg *config.Config, batch *Batch, ms
 func ProcessBatch(ctx context.Context, cfg *config.Config, handler Handler, batch *Batch, reason string) {
 	log.Info(ctx, "process batch starts", log.Data{
 		"batch_size": batch.Size(),
+		"batch_id":   batch.ID(),
 		"reason":     reason})
-	err := handler.Handle(ctx, cfg.ElasticSearchAPIURL, batch.Events())
+	err := handler.Handle(ctx, cfg.ElasticSearchAPIURL, batch.ID(), batch.Events())
 	if err != nil {
-		log.Error(ctx, "error handling batch", err)
+		log.Error(ctx, "error handling batch", err, log.Data{
+			"batch_id": batch.ID(),
+		})
 		return
 	}
 
-	log.Info(ctx, "batch event processed - committing")
+	log.Info(ctx, "batch event processed - committing", log.Data{
+		"batch_id": batch.ID(),
+	})
 }
 
 // Close safely closes the consumer and releases all resources

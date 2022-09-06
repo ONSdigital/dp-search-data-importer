@@ -2,14 +2,18 @@ package event
 
 import (
 	"context"
+	"crypto/rand"
+	"time"
 
 	"github.com/ONSdigital/dp-search-data-importer/models"
 	"github.com/ONSdigital/dp-search-data-importer/schema"
+	"github.com/oklog/ulid"
 )
 
 // Batch handles adding raw messages to a batch of SearchDataImportModel events.
 type Batch struct {
 	maxSize  int
+	batchid  string
 	events   []*models.SearchDataImportModel
 	messages []Message
 }
@@ -34,6 +38,18 @@ func NewBatch(batchSize int) *Batch {
 // Add a message to the batch.
 func (batch *Batch) Add(ctx context.Context, event *models.SearchDataImportModel) {
 	batch.events = append(batch.events, event)
+}
+
+// CreateID creates a batchID
+func (batch *Batch) CreateID() {
+	timeNow := time.Now()
+	entropy := ulid.Monotonic(rand.Reader, 0)
+	batch.batchid = ulid.MustNew(ulid.Timestamp(timeNow), entropy).String()
+}
+
+// ID retrieves batch id
+func (batch *Batch) ID() string {
+	return batch.batchid
 }
 
 // Size returns the number of events currently in the batch.

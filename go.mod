@@ -8,13 +8,14 @@ require (
 	github.com/ONSdigital/dp-component-test v0.6.3
 	github.com/ONSdigital/dp-elasticsearch/v3 v3.0.0-alpha.7
 	github.com/ONSdigital/dp-healthcheck v1.2.3
-	github.com/ONSdigital/dp-kafka/v2 v2.4.3
+	github.com/ONSdigital/dp-kafka/v2 v2.5.0
 	github.com/ONSdigital/dp-net v1.4.1
 	github.com/ONSdigital/dp-net/v2 v2.0.0
 	github.com/ONSdigital/log.go/v2 v2.2.0
 	github.com/cucumber/godog v0.11.0
 	github.com/gorilla/mux v1.8.0
 	github.com/kelseyhightower/envconfig v1.4.0
+	github.com/oklog/ulid v1.3.1
 	github.com/pkg/errors v0.9.1
 	github.com/rdumont/assistdog v0.0.0-20201106100018-168b06230d14
 	github.com/smartystreets/goconvey v1.7.2
@@ -25,7 +26,7 @@ require (
 	github.com/ONSdigital/dp-api-clients-go v1.43.0 // indirect
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.92.2 // indirect
 	github.com/ONSdigital/dp-mongodb-in-memory v1.1.0 // indirect
-	github.com/Shopify/sarama v1.29.1 // indirect
+	github.com/Shopify/sarama v1.30.1 // indirect
 	github.com/aws/aws-sdk-go v1.42.47 // indirect
 	github.com/cucumber/gherkin-go/v11 v11.0.0 // indirect
 	github.com/cucumber/messages-go/v10 v10.0.3 // indirect
@@ -39,7 +40,7 @@ require (
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/gofrs/uuid v3.3.0+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang/snappy v0.0.3 // indirect
+	github.com/golang/snappy v0.0.4 // indirect
 	github.com/gopherjs/gopherjs v0.0.0-20220104163920-15ed2e8cf2bd // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.0 // indirect
 	github.com/hashicorp/go-memdb v1.3.0 // indirect

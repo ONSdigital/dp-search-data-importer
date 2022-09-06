@@ -29,7 +29,7 @@ type EventHandler struct {
 }
 
 // Handle captures the given event and stores it for later assertions
-func (handler *EventHandler) Handle(ctx context.Context, url string, events []*models.SearchDataImportModel) error {
+func (handler *EventHandler) Handle(ctx context.Context, url string, batchID string, events []*models.SearchDataImportModel) error {
 	log.Info(ctx, "eventtest handler called")
 	handler.Events = events
 
