@@ -41,13 +41,13 @@ type Handler interface {
 func (consumer *Consumer) Consume(
 	ctx context.Context,
 	messageConsumer MessageConsumer,
+	batch *Batch,
 	batchHandler Handler,
 	cfg *config.Config) {
 
 	go func() {
 		defer close(consumer.Closed)
 
-		batch := NewBatch(cfg.BatchSize)
 		// Wait a batch full of messages.
 		// If we do not get any messages for a time, just process the messages already in the batch.
 		for {
