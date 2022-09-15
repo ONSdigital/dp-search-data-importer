@@ -5,7 +5,6 @@ import (
 	"time"
 
 	kafka "github.com/ONSdigital/dp-kafka/v2"
-	dprequest "github.com/ONSdigital/dp-net/v2/request"
 	"github.com/ONSdigital/dp-search-data-importer/config"
 	"github.com/ONSdigital/dp-search-data-importer/models"
 	"github.com/ONSdigital/log.go/v2/log"
@@ -39,7 +38,6 @@ type Handler interface {
 
 // Consume converts messages to event instances, and pass the event to the provided handler.
 func (consumer *Consumer) Consume(
-	ctx context.Context,
 	messageConsumer MessageConsumer,
 	batchHandler Handler,
 	cfg *config.Config) {
@@ -48,6 +46,7 @@ func (consumer *Consumer) Consume(
 		defer close(consumer.Closed)
 
 		batch := NewBatch(cfg.BatchSize)
+		ctx := context.Background()
 		// Wait a batch full of messages.
 		// If we do not get any messages for a time, just process the messages already in the batch.
 		for {
@@ -60,6 +59,7 @@ func (consumer *Consumer) Consume(
 					<-delay.C
 				}
 
+				ctx = msg.Context()
 				AddMessageToBatch(ctx, cfg, batch, msg, batchHandler)
 				msg.CommitAndRelease()
 
@@ -92,8 +92,6 @@ func AddMessageToBatch(ctx context.Context, cfg *config.Config, batch *Batch, ms
 		log.Error(ctx, "failed to unmarshal event", err)
 		return
 	}
-
-	ctx = dprequest.WithRequestId(ctx, event.TraceID)
 	log.Info(ctx, "event received to be added into the batch")
 
 	batch.messages = append(batch.messages, msg)

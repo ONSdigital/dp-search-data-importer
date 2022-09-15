@@ -238,7 +238,7 @@ func TestClose(t *testing.T) {
 
 		consumerMock := &kafkatest.IConsumerGroupMock{
 			StopListeningToConsumerFunc: func(ctx context.Context) error { return nil },
-			CloseFunc:                   func(ctx context.Context) error { return nil },
+			CloseFunc:                   func(ctx context.Context, optsFunc ...dpkafka.OptFunc) error { return nil },
 			CheckerFunc:                 func(ctx context.Context, state *healthcheck.CheckState) error { return nil },
 			ChannelsFunc:                func() *dpkafka.ConsumerGroupChannels { return &dpkafka.ConsumerGroupChannels{} },
 		}

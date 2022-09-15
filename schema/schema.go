@@ -22,7 +22,6 @@ var searchDataImportEvent = `{
     {"name": "summary", "type": "string", "default": ""},
     {"name": "title", "type": "string", "default": ""},
     {"name": "topics", "type": {"type":"array","items":"string"}},
-    {"name": "trace_id", "type": "string", "default": ""},
     {"name": "cancelled", "type": "boolean", "default": false},
     {"name": "finalised", "type": "boolean", "default": false},
     {"name": "published", "type": "boolean", "default": false},

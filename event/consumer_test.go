@@ -29,7 +29,6 @@ var (
 		ReleaseDate:     "",
 		Title:           "testTitle1",
 		Topics:          []string{""},
-		TraceID:         "",
 	}
 
 	expectedEventWithEmptyTopicString = models.SearchDataImportModel{
@@ -44,7 +43,6 @@ var (
 		ReleaseDate:     "",
 		Title:           "",
 		Topics:          []string{""},
-		TraceID:         "",
 	}
 
 	expectedEventWithMissingTopicArray = models.SearchDataImportModel{
@@ -58,7 +56,6 @@ var (
 		Summary:         "",
 		ReleaseDate:     "",
 		Title:           "",
-		TraceID:         "",
 	}
 
 	expectedEventWithEmptyTopicArray = models.SearchDataImportModel{
@@ -73,7 +70,6 @@ var (
 		ReleaseDate:     "",
 		Title:           "",
 		Topics:          []string{},
-		TraceID:         "",
 	}
 
 	expectedEvent2 = models.SearchDataImportModel{
@@ -88,7 +84,6 @@ var (
 		ReleaseDate:     "",
 		Title:           "",
 		Topics:          []string{"testtopic1", "testtopic2"},
-		TraceID:         "",
 	}
 )
 
@@ -107,7 +102,7 @@ func TestConsumeWithOneMessage(t *testing.T) {
 
 		Convey("When consume is called", func() {
 
-			go consumer.Consume(testCtx, messageConsumer, eventHandler, cfg)
+			go consumer.Consume(messageConsumer, eventHandler, cfg)
 
 			message := kafkatest.NewMessage([]byte(marshal(expectedEvent1)), 0)
 			messageConsumer.Channels().Upstream <- message
@@ -146,7 +141,7 @@ func TestConsumeWithEmptyTopicString(t *testing.T) {
 
 		Convey("When consume is called", func() {
 
-			go consumer.Consume(testCtx, messageConsumer, eventHandler, cfg)
+			go consumer.Consume(messageConsumer, eventHandler, cfg)
 
 			message := kafkatest.NewMessage([]byte(marshal(expectedEventWithEmptyTopicString)), 0)
 			messageConsumer.Channels().Upstream <- message
@@ -185,7 +180,7 @@ func TestConsumeWithMissingTopicElement(t *testing.T) {
 
 		Convey("When consume is called", func() {
 
-			go consumer.Consume(testCtx, messageConsumer, eventHandler, cfg)
+			go consumer.Consume(messageConsumer, eventHandler, cfg)
 
 			message := kafkatest.NewMessage([]byte(marshal(expectedEventWithMissingTopicArray)), 0)
 			messageConsumer.Channels().Upstream <- message
@@ -224,7 +219,7 @@ func TestConsumeWithEmptyTopicArray(t *testing.T) {
 
 		Convey("When consume is called", func() {
 
-			go consumer.Consume(testCtx, messageConsumer, eventHandler, cfg)
+			go consumer.Consume(messageConsumer, eventHandler, cfg)
 
 			message := kafkatest.NewMessage([]byte(marshal(expectedEventWithEmptyTopicArray)), 0)
 			messageConsumer.Channels().Upstream <- message
@@ -263,7 +258,7 @@ func TestConsumeWithTwoMessages(t *testing.T) {
 		consumer := event.NewConsumer()
 
 		Convey("When consume is called", func() {
-			go consumer.Consume(testCtx, messageConsumer, eventHandler, cfg)
+			go consumer.Consume(messageConsumer, eventHandler, cfg)
 
 			message1 := kafkatest.NewMessage([]byte(marshal(expectedEvent1)), 0)
 			messageConsumer.Channels().Upstream <- message1
@@ -300,7 +295,7 @@ func TestClose(t *testing.T) {
 			t.Fatalf("failed to retrieve configuration: %v", err)
 		}
 		consumer := event.NewConsumer()
-		go consumer.Consume(testCtx, messageConsumer, eventHandler, cfg)
+		go consumer.Consume(messageConsumer, eventHandler, cfg)
 
 		Convey("When close is called", func() {
 			err := consumer.Close(testCtx)

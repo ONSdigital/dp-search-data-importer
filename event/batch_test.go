@@ -210,7 +210,6 @@ func getExpectedEvent() models.SearchDataImportModel {
 		ReleaseDate:     "",
 		Title:           "",
 		Topics:          []string{"testtopic1", "testtopic2"},
-		TraceID:         "",
 	}
 	return expectedEvent
 }

@@ -31,7 +31,6 @@ var (
 		Summary:         "",
 		ReleaseDate:     "",
 		Title:           "anyTitle1",
-		TraceID:         "anyTraceID1",
 		DateChanges:     []models.ReleaseDateDetails{},
 		Cancelled:       false,
 		Finalised:       false,
@@ -54,7 +53,6 @@ var (
 		Summary:         "",
 		ReleaseDate:     "",
 		Title:           "anyTitle2",
-		TraceID:         "anyTraceID2",
 	}
 
 	testEvents = []*models.SearchDataImportModel{

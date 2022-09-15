@@ -16,7 +16,6 @@ type SearchDataImportModel struct {
 	Summary         string               `avro:"summary"`
 	Title           string               `avro:"title"`
 	Topics          []string             `avro:"topics"`
-	TraceID         string               `avro:"trace_id"`
 	DateChanges     []ReleaseDateDetails `avro:"date_changes"`
 	Cancelled       bool                 `avro:"cancelled"`
 	Finalised       bool                 `avro:"finalised"`

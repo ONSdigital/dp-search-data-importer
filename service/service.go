@@ -69,7 +69,7 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 	eventConsumer := event.NewConsumer()
 
 	// Start listening for event messages.
-	eventConsumer.Consume(ctx, kafkaConsumer, batchHandler, cfg)
+	eventConsumer.Consume(kafkaConsumer, batchHandler, cfg)
 
 	// Kafka error logging go-routine
 	kafkaConsumer.Channels().LogErrors(ctx, "error received from kafka consumer, topic: "+cfg.PublishedContentTopic)
