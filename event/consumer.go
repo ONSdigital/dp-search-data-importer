@@ -108,6 +108,7 @@ func ProcessBatch(ctx context.Context, cfg *config.Config, handler Handler, batc
 	log.Info(ctx, "process batch starts", log.Data{
 		"batch_size": batch.Size(),
 		"reason":     reason})
+	defer batch.Clear()
 	err := handler.Handle(ctx, cfg.ElasticSearchAPIURL, batch.Events())
 	if err != nil {
 		log.Error(ctx, "error handling batch", err)
