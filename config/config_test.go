@@ -20,7 +20,7 @@ func TestConfig(t *testing.T) {
 			})
 
 			Convey("Then the values should be set to the expected defaults", func() {
-				So(cfg.AwsRegion, ShouldEqual, "eu-west-1")
+				So(cfg.AwsRegion, ShouldEqual, "eu-west-2")
 				So(cfg.AwsService, ShouldEqual, "es")
 				So(cfg.BatchSize, ShouldEqual, 500)
 				So(cfg.BatchWaitTime, ShouldEqual, time.Second*5)

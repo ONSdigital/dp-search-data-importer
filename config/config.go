@@ -60,7 +60,7 @@ func Get() (*Config, error) {
 		BatchSize:                  500,
 		BatchWaitTime:              time.Second * 5,
 		ElasticSearchAPIURL:        "http://localhost:11200",
-		AwsRegion:                  "eu-west-1",
+		AwsRegion:                  "eu-west-2",
 		AwsService:                 "es",
 		SignElasticsearchRequests:  false,
 		StopConsumingOnUnhealthy:   true,
