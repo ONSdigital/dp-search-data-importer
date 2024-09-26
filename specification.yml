@@ -1,0 +1,174 @@
+asyncapi: 3.0.0
+info:
+  title: dp-search-data-importer
+  version: 1.1.0
+  description: |-
+    The *dp-search-data-importer* processes search-data-import events and then 
+    upserts the ElasticSearch index with them.
+  license:
+    name: MIT
+    url: https://opensource.org/license/MIT
+defaultContentType: avro/binary
+channels:
+  search-data-import:
+    messages:
+      search-data-import:
+        $ref: '#/components/messages/search-data-import'
+    description: This topic contains a message of processed search information, ready for import.
+operations:
+  search-data-import:
+    action: receive
+    channel:
+      $ref: '#/channels/search-data-import'
+    summary: Receive data for import to ElasticSearch
+    messages:
+      - $ref: '#/channels/search-data-import/messages/search-data-import'
+components:
+  messages:
+    search-data-import:
+      name: search-data-import
+      title: Item has been processed ready for search import
+      payload:
+        type: object
+        required:
+        - uid
+        - uri
+        - title
+        properties:
+          uid:
+            type: string
+            description: Unique ID by which to index in search
+          uri:
+            type: string
+            description: URI of upstream content item
+          data_type:
+            type: string
+            description: Content type ID, used for aggregations
+            enum:
+            - api_dataset_landing_page
+            - article
+            - article_download
+            - bulletin
+            - compendium_chapter
+            - compendium_data
+            - compendium_landing_page
+            - dataset
+            - dataset_landing_page
+            - home_page
+            - home_page_census
+            - product_page
+            - reference_tables
+            - release
+            - static_adhoc
+            - static_article
+            - static_foi
+            - static_landing_page
+            - static_methodology
+            - static_methodology_download
+            - static_page
+            - static_qmi
+            - taxonomy_landing_page
+            - timeseries
+            - visualisation
+          job_id:
+            type: string
+            description: Job ID for use with reindex pipeline
+          search_index:
+            type: string
+            description: Specific search index ID for use with reindex pipeline
+          cdid:
+            type: string
+            description: CDID for content item, typically used with timeseries
+          dataset_id:
+            type: string
+            description: Dataset ID for content item
+          edition:
+            type: string
+          keywords:
+            type: array
+            items:
+              type: string
+          meta_description:
+            type: string
+          release_date:
+            type: string
+            format: date-time
+            description: Release date in an ISO 8601 format
+            example: "2026-02-12T07:00:00.000Z"
+          summary:
+            type: string
+            description: Summary text, typically used in search listings
+          title:
+            type: string
+            description: Title of the content item
+          topics:
+            type: array
+            description: Array of topic IDs taken from Topic API
+            items:
+              type: string
+          trace_id:
+            type: string
+            description: Trace ID for OTEL tracing
+          cancelled:
+            type: boolean
+            description: Shows if a release has been cancelled, only used with Release content type
+          finalised:
+            type: boolean
+            description: Shows if a release has been finalised, only used with Release content type
+          published:
+            type: boolean
+            description: Shows if a release has been published, only used with Release content type
+            tags:
+            - name: bum
+              description: hello there
+          language:
+            type: string
+          survey:
+            type: string
+          canonical_topic:
+            type: string
+          date_changes:
+            type: array
+            description: List of date changes, only used with Release content type
+            items:
+              type: object
+              properties:
+                change_notice:
+                  type: string
+                previous_date:
+                  type: string
+          provisional_date:
+            type: string
+            description: A provisional date string, only used with Release content type
+            example: October-November 2024
+          dimensions:
+            type: array
+            description: Array of dimensions, not currently used.
+            items:
+              type: object
+              properties:
+                key: 
+                  type: string
+                agg_key:
+                  type: string
+                name:
+                  type: string
+                label:
+                  type: string
+                raw_label:
+                  type: string
+          population_type:
+            type: array
+            description: Array of population types, not currently used.
+            items:
+              type: object
+              properties:
+                key:
+                  type: string
+                agg_key:
+                  type: string
+                name:
+                  type: string
+                label:
+                  type: string
+
