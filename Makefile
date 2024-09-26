@@ -50,7 +50,6 @@ lint: ## Used in ci to run linters against Go code
 
 .PHONY: lint-local
 lint-local: ## Use locally to run linters against Go code
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.61.0
 	golangci-lint run ./...
 
 .PHONY: produce
@@ -64,6 +63,10 @@ test: ## Runs unit tests including checks for race conditions and returns covera
 .PHONY: test-component
 test-component: ## Runs component test suite
 	go test -cover -coverpkg=github.com/ONSdigital/dp-search-data-importer/... -component
+
+.PHONY: validate-specification
+validate-specification: ## Validates specification
+	asyncapi validate specification.yml
 
 .PHONY: help
 help: ## Show help page for list of make targets
