@@ -15,6 +15,11 @@ channels:
       search-data-import:
         $ref: '#/components/messages/search-data-import'
     description: This topic contains a message of processed search information, ready for import.
+  content-deleted:
+    messages:
+      content-deleted:
+        $ref: '#/components/messages/content-deleted'
+    description: This topic contains the information with which to delete an item from the search index
 operations:
   search-data-import:
     action: receive
@@ -23,6 +28,13 @@ operations:
     summary: Receive data for import to ElasticSearch
     messages:
       - $ref: '#/channels/search-data-import/messages/search-data-import'
+  content-deleted:
+    action: receive
+    channel:
+      $ref: '#/channels/content-deleted'
+    summary: Delete item from index in ElasticSearch
+    messages:
+      - $ref: '#/channels/content-deleted/messages/content-deleted'
 components:
   messages:
     search-data-import:
@@ -172,4 +184,21 @@ components:
                   type: string
                 label:
                   type: string
+    content-deleted:
+      name: content-deleted
+      title: Content item has been deleted and should be removed from search
+      payload:
+        type: object
+        required:
+        - uri
+        properties:
+          uri:
+            type: string
+            description: URI of the upstream content item
+            format: uri
+            example: /economy/environmentalaccounts
+          trace_id:
+            type: string
+            description: Trace ID for OTEL tracing
+
 
