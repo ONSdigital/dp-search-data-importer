@@ -2,8 +2,6 @@ module github.com/ONSdigital/dp-search-data-importer
 
 go 1.23
 
-replace google.golang.org/protobuf => google.golang.org/protobuf v1.33.0
-
 require (
 	github.com/ONSdigital/dp-component-test v0.11.0
 	github.com/ONSdigital/dp-elasticsearch/v3 v3.0.0-alpha.11
@@ -88,5 +86,7 @@ require (
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.20.0 // indirect
 	golang.org/x/text v0.15.0 // indirect
+	//protobuf upgraded here to avoid CVE-2024-24786
+	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
