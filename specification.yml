@@ -34,6 +34,7 @@ components:
         - uid
         - uri
         - title
+        - search_index
         properties:
           uid:
             type: string
