@@ -1,6 +1,6 @@
 module github.com/ONSdigital/dp-search-data-importer
 
-go 1.22
+go 1.23
 
 replace google.golang.org/protobuf => google.golang.org/protobuf v1.33.0
 
