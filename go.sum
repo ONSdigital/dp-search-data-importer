@@ -4,8 +4,8 @@ github.com/ONSdigital/dp-component-test v0.11.0 h1:b/4l2hSBo1TRCtPWXv5cJBW1zTUJk
 github.com/ONSdigital/dp-component-test v0.11.0/go.mod h1:78ezvtVsVAcN5OiQkjJ30Q6xZx0diuYNTLpZHi5qW4Y=
 github.com/ONSdigital/dp-elasticsearch/v3 v3.0.0-alpha.11 h1:bPU1f5BS4I/zqZJY3sZX2Qa0XH+TNg9glmSUtJQETdM=
 github.com/ONSdigital/dp-elasticsearch/v3 v3.0.0-alpha.11/go.mod h1:w/aKn5mdX0o8sDaJPU3jas49Ed0fgrXYTeGU5DhMnHk=
-github.com/ONSdigital/dp-healthcheck v1.6.1 h1:YDAnxE2fI3G2hhGC42mKI/fRhAhIYmFZGQwQ/8M65M0=
-github.com/ONSdigital/dp-healthcheck v1.6.1/go.mod h1:FURB2RUJHw3lssamKtsGsrbu31ar9yhMSDYzG9vgSIo=
+github.com/ONSdigital/dp-healthcheck v1.6.3 h1:EekpiLjiXQtetNDmworUhZZMDvcG70b2cZYhVhEuUSs=
+github.com/ONSdigital/dp-healthcheck v1.6.3/go.mod h1:qZXdjvZoSbMW/YLmzMZobnvbP5onaVwKhj2yDi6JXdY=
 github.com/ONSdigital/dp-kafka/v3 v3.10.0 h1:ScfhAwH4X9L4vaavh0YR3ECHpztP0hDL4RCiBKDqghA=
 github.com/ONSdigital/dp-kafka/v3 v3.10.0/go.mod h1:o5/dgPOv9tFjL+Vf6ke5yS68uFD40AE0mfjUxHQ/B/o=
 github.com/ONSdigital/dp-mongodb-in-memory v1.7.0 h1:lBmjAOfnp4JPZU/Krq+ad1sqknTwUZrUp+rFHoMfr8s=

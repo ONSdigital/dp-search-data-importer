@@ -7,7 +7,7 @@ replace google.golang.org/protobuf => google.golang.org/protobuf v1.33.0
 require (
 	github.com/ONSdigital/dp-component-test v0.11.0
 	github.com/ONSdigital/dp-elasticsearch/v3 v3.0.0-alpha.11
-	github.com/ONSdigital/dp-healthcheck v1.6.1
+	github.com/ONSdigital/dp-healthcheck v1.6.3
 	github.com/ONSdigital/dp-kafka/v3 v3.10.0
 	github.com/ONSdigital/dp-net/v2 v2.11.2
 	github.com/ONSdigital/log.go/v2 v2.4.3
