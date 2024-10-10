@@ -15,10 +15,10 @@ channels:
       search-data-import:
         $ref: '#/components/messages/search-data-import'
     description: This topic contains a message of processed search information, ready for import.
-  content-deleted:
+  search-content-deleted:
     messages:
-      content-deleted:
-        $ref: '#/components/messages/content-deleted'
+      search-content-deleted:
+        $ref: '#/components/messages/search-content-deleted'
     description: This topic contains the information with which to delete an item from the search index
 operations:
   search-data-import:
@@ -28,13 +28,13 @@ operations:
     summary: Receive data for import to ElasticSearch
     messages:
       - $ref: '#/channels/search-data-import/messages/search-data-import'
-  content-deleted:
+  search-content-deleted:
     action: receive
     channel:
-      $ref: '#/channels/content-deleted'
+      $ref: '#/channels/search-content-deleted'
     summary: Delete item from index in ElasticSearch
     messages:
-      - $ref: '#/channels/content-deleted/messages/content-deleted'
+      - $ref: '#/channels/search-content-deleted/messages/search-content-deleted'
 components:
   messages:
     search-data-import:
@@ -184,8 +184,8 @@ components:
                   type: string
                 label:
                   type: string
-    content-deleted:
-      name: content-deleted
+    search-content-deleted:
+      name: search-content-deleted
       title: Content item has been deleted and should be removed from search
       payload:
         type: object
