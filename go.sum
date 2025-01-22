@@ -10,8 +10,8 @@ github.com/ONSdigital/dp-kafka/v3 v3.10.0 h1:ScfhAwH4X9L4vaavh0YR3ECHpztP0hDL4RC
 github.com/ONSdigital/dp-kafka/v3 v3.10.0/go.mod h1:o5/dgPOv9tFjL+Vf6ke5yS68uFD40AE0mfjUxHQ/B/o=
 github.com/ONSdigital/dp-mongodb-in-memory v1.7.0 h1:lBmjAOfnp4JPZU/Krq+ad1sqknTwUZrUp+rFHoMfr8s=
 github.com/ONSdigital/dp-mongodb-in-memory v1.7.0/go.mod h1:78zt2X+mhXlPlDoaAX19Hu462XPJIW/llN2vcUAAWSc=
-github.com/ONSdigital/dp-net/v2 v2.17.0 h1:sFJYGnr+vEpQPiO3MaL5MdkDezit3IJsx3iCW+dWqyU=
-github.com/ONSdigital/dp-net/v2 v2.17.0/go.mod h1:oN2p+QIKx0pz4K1bgHGvXA/9WkuMrh1F/3HtHoCc0CA=
+github.com/ONSdigital/dp-net/v2 v2.18.0 h1:w2Or+n/TLrJXVKf0ygg0Cvwcf04o+y9KYityhKoFex8=
+github.com/ONSdigital/dp-net/v2 v2.18.0/go.mod h1:F6yL3jjuVwBLVMFIKgHF3zhMRbmZysAxBiu+aIAi3Z0=
 github.com/ONSdigital/log.go/v2 v2.4.3 h1:zTW5ZV3+ytqypS7opcDkjBP+k45I+XoTuP/IPlm5oUg=
 github.com/ONSdigital/log.go/v2 v2.4.3/go.mod h1:2TiXCcEsIlDBH9f+4D0NybZPecobd++dphJv2GqVDb0=
 github.com/Shopify/sarama v1.38.1 h1:lqqPUPQZ7zPqYlWpTh+LQ9bhYNu2xJL6k1SJN4WVe2A=
