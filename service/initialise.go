@@ -9,8 +9,8 @@ import (
 	dpESClient "github.com/ONSdigital/dp-elasticsearch/v3/client"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	kafka "github.com/ONSdigital/dp-kafka/v3"
-	dpawsauth "github.com/ONSdigital/dp-net/v2/awsauth"
-	dphttp "github.com/ONSdigital/dp-net/v2/http"
+	dpawsauth "github.com/ONSdigital/dp-net/v3/awsauth"
+	dphttp "github.com/ONSdigital/dp-net/v3/http"
 	"github.com/ONSdigital/dp-search-data-importer/config"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/pkg/errors"
@@ -73,7 +73,7 @@ var GetElasticSearchClient = func(ctx context.Context, cfg *config.Config) (dpES
 	}
 
 	if cfg.SignElasticsearchRequests {
-		awsSigner, err := dpawsauth.NewAWSSignerRoundTripper("", "", cfg.AwsRegion, cfg.AwsService)
+		awsSigner, err := dpawsauth.NewAWSSignerRoundTripper(ctx, "", "", cfg.AwsRegion, cfg.AwsService)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create aws v4 signer: %w", err)
 		}
