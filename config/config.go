@@ -35,6 +35,7 @@ type Kafka struct {
 	ProducerMinBrokersHealthy int      `envconfig:"KAFKA_PRODUCER_MIN_BROKERS_HEALTHY"`
 	PublishedContentGroup     string   `envconfig:"KAFKA_PUBLISHED_CONTENT_GROUP"`
 	PublishedContentTopic     string   `envconfig:"KAFKA_PUBLISHED_CONTENT_TOPIC"`
+	DeletedContentTopic       string   `envconfig:"KAFKA_DELETED_CONTENT_TOPIC"`
 	SecCACerts                string   `envconfig:"KAFKA_SEC_CA_CERTS"            json:"-"`
 	SecClientCert             string   `envconfig:"KAFKA_SEC_CLIENT_CERT"         json:"-"`
 	SecClientKey              string   `envconfig:"KAFKA_SEC_CLIENT_KEY"          json:"-"`
@@ -67,6 +68,7 @@ func Get() (*Config, error) {
 		Kafka: &Kafka{
 			PublishedContentGroup:     "dp-search-data-importer",
 			PublishedContentTopic:     "search-data-import",
+			DeletedContentTopic:       "search-content-deleted",
 			Addr:                      []string{"localhost:9092", "localhost:9093", "localhost:9094"},
 			Version:                   "1.0.2",
 			OffsetOldest:              true,

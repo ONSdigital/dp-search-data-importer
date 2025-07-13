@@ -37,6 +37,7 @@ func TestConfig(t *testing.T) {
 				So(cfg.Kafka.ProducerMinBrokersHealthy, ShouldEqual, 1)
 				So(cfg.Kafka.PublishedContentGroup, ShouldEqual, "dp-search-data-importer")
 				So(cfg.Kafka.PublishedContentTopic, ShouldEqual, "search-data-import")
+				So(cfg.Kafka.DeletedContentTopic, ShouldEqual, "search-content-deleted")
 				So(cfg.Kafka.SecCACerts, ShouldEqual, "")
 				So(cfg.Kafka.SecClientCert, ShouldEqual, "")
 				So(cfg.Kafka.SecClientKey, ShouldEqual, "")
