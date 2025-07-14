@@ -3,11 +3,11 @@ module github.com/ONSdigital/dp-search-data-importer
 go 1.24
 
 require (
-	github.com/ONSdigital/dp-component-test v0.20.0
-	github.com/ONSdigital/dp-elasticsearch/v3 v3.0.1-alpha.4
+	github.com/ONSdigital/dp-component-test v0.24.0
+	github.com/ONSdigital/dp-elasticsearch/v3 v3.0.3
 	github.com/ONSdigital/dp-healthcheck v1.6.4
-	github.com/ONSdigital/dp-kafka/v3 v3.10.0
-	github.com/ONSdigital/dp-net/v3 v3.2.1
+	github.com/ONSdigital/dp-kafka/v3 v3.11.0
+	github.com/ONSdigital/dp-net/v3 v3.3.0
 	github.com/ONSdigital/log.go/v2 v2.4.5
 	github.com/cucumber/godog v0.15.0
 	github.com/google/go-cmp v0.7.0
@@ -19,37 +19,41 @@ require (
 )
 
 require (
-	github.com/ONSdigital/dp-api-clients-go/v2 v2.266.0 // indirect
+	github.com/ONSdigital/dis-redis v0.3.0 // indirect
+	github.com/ONSdigital/dp-api-clients-go/v2 v2.267.0 // indirect
 	github.com/ONSdigital/dp-mongodb-in-memory v1.8.1 // indirect
 	github.com/ONSdigital/dp-net/v2 v2.22.0 // indirect
 	github.com/Shopify/sarama v1.38.1 // indirect
-	github.com/aws/aws-sdk-go-v2 v1.36.3 // indirect
-	github.com/aws/aws-sdk-go-v2/config v1.29.13 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.66 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.30 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.34 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.34 // indirect
+	github.com/alicebob/miniredis/v2 v2.35.0 // indirect
+	github.com/aws/aws-sdk-go-v2 v1.36.5 // indirect
+	github.com/aws/aws-sdk-go-v2/config v1.29.17 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.70 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.32 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.36 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.36 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.15 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.25.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.30.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.33.18 // indirect
-	github.com/aws/smithy-go v1.22.3 // indirect
-	github.com/chromedp/cdproto v0.0.0-20250403032234-65de8f5d025b // indirect
-	github.com/chromedp/chromedp v0.13.6 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.17 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.25.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.30.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.34.0 // indirect
+	github.com/aws/smithy-go v1.22.4 // indirect
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
+	github.com/chromedp/cdproto v0.0.0-20250713235838-3ec7dc2cfcb5 // indirect
+	github.com/chromedp/chromedp v0.13.7 // indirect
 	github.com/chromedp/sysutil v1.1.0 // indirect
 	github.com/cucumber/gherkin/go/v26 v26.2.0 // indirect
 	github.com/cucumber/messages/go/v21 v21.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/eapache/go-resiliency v1.7.0 // indirect
 	github.com/eapache/go-xerial-snappy v0.0.0-20230731223053-c322873962e3 // indirect
 	github.com/eapache/queue v1.1.0 // indirect
 	github.com/elastic/go-elasticsearch/v7 v7.10.0 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/go-avro/avro v0.0.0-20171219232920-444163702c11 // indirect
-	github.com/go-json-experiment/json v0.0.0-20250223041408-d3c622f1b874 // indirect
-	github.com/go-logr/logr v1.4.2 // indirect
+	github.com/go-json-experiment/json v0.0.0-20250709061156-d2cd4771eb1b // indirect
+	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
@@ -79,6 +83,7 @@ require (
 	github.com/pierrec/lz4/v4 v4.1.22 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9 // indirect
+	github.com/redis/go-redis/v9 v9.11.0 // indirect
 	github.com/smarty/assertions v1.16.0 // indirect
 	github.com/spf13/afero v1.14.0 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
@@ -87,15 +92,16 @@ require (
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
-	go.mongodb.org/mongo-driver v1.17.3 // indirect
+	github.com/yuin/gopher-lua v1.1.1 // indirect
+	go.mongodb.org/mongo-driver v1.17.4 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
-	go.opentelemetry.io/otel v1.35.0 // indirect
-	go.opentelemetry.io/otel/metric v1.35.0 // indirect
-	go.opentelemetry.io/otel/trace v1.35.0 // indirect
-	golang.org/x/crypto v0.37.0 // indirect
-	golang.org/x/net v0.39.0 // indirect
-	golang.org/x/sync v0.13.0 // indirect
-	golang.org/x/sys v0.32.0 // indirect
-	golang.org/x/text v0.24.0 // indirect
+	go.opentelemetry.io/otel v1.37.0 // indirect
+	go.opentelemetry.io/otel/metric v1.37.0 // indirect
+	go.opentelemetry.io/otel/trace v1.37.0 // indirect
+	golang.org/x/crypto v0.40.0 // indirect
+	golang.org/x/net v0.42.0 // indirect
+	golang.org/x/sync v0.16.0 // indirect
+	golang.org/x/sys v0.34.0 // indirect
+	golang.org/x/text v0.27.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

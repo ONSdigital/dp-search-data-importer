@@ -24,7 +24,7 @@ var _ service.ElasticSearch = &ElasticSearchMock{}
 //			AddDocumentFunc: func(ctx context.Context, indexName string, documentID string, document []byte, opts *dpelasticsearch.AddDocumentOptions) error {
 //				panic("mock out the AddDocument method")
 //			},
-//			BulkIndexAddFunc: func(ctx context.Context, action dpelasticsearch.BulkIndexerAction, index string, documentID string, document []byte) error {
+//			BulkIndexAddFunc: func(ctx context.Context, action dpelasticsearch.BulkIndexerAction, index string, documentID string, document []byte, onSuccess dpelasticsearch.SuccessFunc, onFailure dpelasticsearch.FailureFunc) error {
 //				panic("mock out the BulkIndexAdd method")
 //			},
 //			BulkIndexCloseFunc: func(contextMoqParam context.Context) error {
@@ -35,6 +35,9 @@ var _ service.ElasticSearch = &ElasticSearchMock{}
 //			},
 //			CheckerFunc: func(ctx context.Context, state *healthcheck.CheckState) error {
 //				panic("mock out the Checker method")
+//			},
+//			CountFunc: func(ctx context.Context, count dpelasticsearch.Count) ([]byte, error) {
+//				panic("mock out the Count method")
 //			},
 //			CountIndicesFunc: func(ctx context.Context, indices []string) ([]byte, error) {
 //				panic("mock out the CountIndices method")
@@ -48,13 +51,16 @@ var _ service.ElasticSearch = &ElasticSearchMock{}
 //			DeleteIndicesFunc: func(ctx context.Context, indices []string) error {
 //				panic("mock out the DeleteIndices method")
 //			},
+//			ExplainFunc: func(ctx context.Context, documentID string, search dpelasticsearch.Search) ([]byte, error) {
+//				panic("mock out the Explain method")
+//			},
 //			GetAliasFunc: func(ctx context.Context) ([]byte, error) {
 //				panic("mock out the GetAlias method")
 //			},
 //			GetIndicesFunc: func(ctx context.Context, indexPatterns []string) ([]byte, error) {
 //				panic("mock out the GetIndices method")
 //			},
-//			MultiSearchFunc: func(ctx context.Context, searches []dpelasticsearch.Search) ([]byte, error) {
+//			MultiSearchFunc: func(ctx context.Context, searches []dpelasticsearch.Search, queryParams *dpelasticsearch.QueryParams) ([]byte, error) {
 //				panic("mock out the MultiSearch method")
 //			},
 //			NewBulkIndexerFunc: func(contextMoqParam context.Context) error {
@@ -77,7 +83,7 @@ type ElasticSearchMock struct {
 	AddDocumentFunc func(ctx context.Context, indexName string, documentID string, document []byte, opts *dpelasticsearch.AddDocumentOptions) error
 
 	// BulkIndexAddFunc mocks the BulkIndexAdd method.
-	BulkIndexAddFunc func(ctx context.Context, action dpelasticsearch.BulkIndexerAction, index string, documentID string, document []byte) error
+	BulkIndexAddFunc func(ctx context.Context, action dpelasticsearch.BulkIndexerAction, index string, documentID string, document []byte, onSuccess dpelasticsearch.SuccessFunc, onFailure dpelasticsearch.FailureFunc) error
 
 	// BulkIndexCloseFunc mocks the BulkIndexClose method.
 	BulkIndexCloseFunc func(contextMoqParam context.Context) error
@@ -87,6 +93,9 @@ type ElasticSearchMock struct {
 
 	// CheckerFunc mocks the Checker method.
 	CheckerFunc func(ctx context.Context, state *healthcheck.CheckState) error
+
+	// CountFunc mocks the Count method.
+	CountFunc func(ctx context.Context, count dpelasticsearch.Count) ([]byte, error)
 
 	// CountIndicesFunc mocks the CountIndices method.
 	CountIndicesFunc func(ctx context.Context, indices []string) ([]byte, error)
@@ -100,6 +109,9 @@ type ElasticSearchMock struct {
 	// DeleteIndicesFunc mocks the DeleteIndices method.
 	DeleteIndicesFunc func(ctx context.Context, indices []string) error
 
+	// ExplainFunc mocks the Explain method.
+	ExplainFunc func(ctx context.Context, documentID string, search dpelasticsearch.Search) ([]byte, error)
+
 	// GetAliasFunc mocks the GetAlias method.
 	GetAliasFunc func(ctx context.Context) ([]byte, error)
 
@@ -107,7 +119,7 @@ type ElasticSearchMock struct {
 	GetIndicesFunc func(ctx context.Context, indexPatterns []string) ([]byte, error)
 
 	// MultiSearchFunc mocks the MultiSearch method.
-	MultiSearchFunc func(ctx context.Context, searches []dpelasticsearch.Search) ([]byte, error)
+	MultiSearchFunc func(ctx context.Context, searches []dpelasticsearch.Search, queryParams *dpelasticsearch.QueryParams) ([]byte, error)
 
 	// NewBulkIndexerFunc mocks the NewBulkIndexer method.
 	NewBulkIndexerFunc func(contextMoqParam context.Context) error
@@ -145,6 +157,10 @@ type ElasticSearchMock struct {
 			DocumentID string
 			// Document is the document argument value.
 			Document []byte
+			// OnSuccess is the onSuccess argument value.
+			OnSuccess dpelasticsearch.SuccessFunc
+			// OnFailure is the onFailure argument value.
+			OnFailure dpelasticsearch.FailureFunc
 		}
 		// BulkIndexClose holds details about calls to the BulkIndexClose method.
 		BulkIndexClose []struct {
@@ -168,6 +184,13 @@ type ElasticSearchMock struct {
 			Ctx context.Context
 			// State is the state argument value.
 			State *healthcheck.CheckState
+		}
+		// Count holds details about calls to the Count method.
+		Count []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Count is the count argument value.
+			Count dpelasticsearch.Count
 		}
 		// CountIndices holds details about calls to the CountIndices method.
 		CountIndices []struct {
@@ -199,6 +222,15 @@ type ElasticSearchMock struct {
 			// Indices is the indices argument value.
 			Indices []string
 		}
+		// Explain holds details about calls to the Explain method.
+		Explain []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// DocumentID is the documentID argument value.
+			DocumentID string
+			// Search is the search argument value.
+			Search dpelasticsearch.Search
+		}
 		// GetAlias holds details about calls to the GetAlias method.
 		GetAlias []struct {
 			// Ctx is the ctx argument value.
@@ -217,6 +249,8 @@ type ElasticSearchMock struct {
 			Ctx context.Context
 			// Searches is the searches argument value.
 			Searches []dpelasticsearch.Search
+			// QueryParams is the queryParams argument value.
+			QueryParams *dpelasticsearch.QueryParams
 		}
 		// NewBulkIndexer holds details about calls to the NewBulkIndexer method.
 		NewBulkIndexer []struct {
@@ -247,10 +281,12 @@ type ElasticSearchMock struct {
 	lockBulkIndexClose sync.RWMutex
 	lockBulkUpdate     sync.RWMutex
 	lockChecker        sync.RWMutex
+	lockCount          sync.RWMutex
 	lockCountIndices   sync.RWMutex
 	lockCreateIndex    sync.RWMutex
 	lockDeleteIndex    sync.RWMutex
 	lockDeleteIndices  sync.RWMutex
+	lockExplain        sync.RWMutex
 	lockGetAlias       sync.RWMutex
 	lockGetIndices     sync.RWMutex
 	lockMultiSearch    sync.RWMutex
@@ -308,7 +344,7 @@ func (mock *ElasticSearchMock) AddDocumentCalls() []struct {
 }
 
 // BulkIndexAdd calls BulkIndexAddFunc.
-func (mock *ElasticSearchMock) BulkIndexAdd(ctx context.Context, action dpelasticsearch.BulkIndexerAction, index string, documentID string, document []byte) error {
+func (mock *ElasticSearchMock) BulkIndexAdd(ctx context.Context, action dpelasticsearch.BulkIndexerAction, index string, documentID string, document []byte, onSuccess dpelasticsearch.SuccessFunc, onFailure dpelasticsearch.FailureFunc) error {
 	if mock.BulkIndexAddFunc == nil {
 		panic("ElasticSearchMock.BulkIndexAddFunc: method is nil but ElasticSearch.BulkIndexAdd was just called")
 	}
@@ -318,17 +354,21 @@ func (mock *ElasticSearchMock) BulkIndexAdd(ctx context.Context, action dpelasti
 		Index      string
 		DocumentID string
 		Document   []byte
+		OnSuccess  dpelasticsearch.SuccessFunc
+		OnFailure  dpelasticsearch.FailureFunc
 	}{
 		Ctx:        ctx,
 		Action:     action,
 		Index:      index,
 		DocumentID: documentID,
 		Document:   document,
+		OnSuccess:  onSuccess,
+		OnFailure:  onFailure,
 	}
 	mock.lockBulkIndexAdd.Lock()
 	mock.calls.BulkIndexAdd = append(mock.calls.BulkIndexAdd, callInfo)
 	mock.lockBulkIndexAdd.Unlock()
-	return mock.BulkIndexAddFunc(ctx, action, index, documentID, document)
+	return mock.BulkIndexAddFunc(ctx, action, index, documentID, document, onSuccess, onFailure)
 }
 
 // BulkIndexAddCalls gets all the calls that were made to BulkIndexAdd.
@@ -341,6 +381,8 @@ func (mock *ElasticSearchMock) BulkIndexAddCalls() []struct {
 	Index      string
 	DocumentID string
 	Document   []byte
+	OnSuccess  dpelasticsearch.SuccessFunc
+	OnFailure  dpelasticsearch.FailureFunc
 } {
 	var calls []struct {
 		Ctx        context.Context
@@ -348,6 +390,8 @@ func (mock *ElasticSearchMock) BulkIndexAddCalls() []struct {
 		Index      string
 		DocumentID string
 		Document   []byte
+		OnSuccess  dpelasticsearch.SuccessFunc
+		OnFailure  dpelasticsearch.FailureFunc
 	}
 	mock.lockBulkIndexAdd.RLock()
 	calls = mock.calls.BulkIndexAdd
@@ -464,6 +508,42 @@ func (mock *ElasticSearchMock) CheckerCalls() []struct {
 	mock.lockChecker.RLock()
 	calls = mock.calls.Checker
 	mock.lockChecker.RUnlock()
+	return calls
+}
+
+// Count calls CountFunc.
+func (mock *ElasticSearchMock) Count(ctx context.Context, count dpelasticsearch.Count) ([]byte, error) {
+	if mock.CountFunc == nil {
+		panic("ElasticSearchMock.CountFunc: method is nil but ElasticSearch.Count was just called")
+	}
+	callInfo := struct {
+		Ctx   context.Context
+		Count dpelasticsearch.Count
+	}{
+		Ctx:   ctx,
+		Count: count,
+	}
+	mock.lockCount.Lock()
+	mock.calls.Count = append(mock.calls.Count, callInfo)
+	mock.lockCount.Unlock()
+	return mock.CountFunc(ctx, count)
+}
+
+// CountCalls gets all the calls that were made to Count.
+// Check the length with:
+//
+//	len(mockedElasticSearch.CountCalls())
+func (mock *ElasticSearchMock) CountCalls() []struct {
+	Ctx   context.Context
+	Count dpelasticsearch.Count
+} {
+	var calls []struct {
+		Ctx   context.Context
+		Count dpelasticsearch.Count
+	}
+	mock.lockCount.RLock()
+	calls = mock.calls.Count
+	mock.lockCount.RUnlock()
 	return calls
 }
 
@@ -615,6 +695,46 @@ func (mock *ElasticSearchMock) DeleteIndicesCalls() []struct {
 	return calls
 }
 
+// Explain calls ExplainFunc.
+func (mock *ElasticSearchMock) Explain(ctx context.Context, documentID string, search dpelasticsearch.Search) ([]byte, error) {
+	if mock.ExplainFunc == nil {
+		panic("ElasticSearchMock.ExplainFunc: method is nil but ElasticSearch.Explain was just called")
+	}
+	callInfo := struct {
+		Ctx        context.Context
+		DocumentID string
+		Search     dpelasticsearch.Search
+	}{
+		Ctx:        ctx,
+		DocumentID: documentID,
+		Search:     search,
+	}
+	mock.lockExplain.Lock()
+	mock.calls.Explain = append(mock.calls.Explain, callInfo)
+	mock.lockExplain.Unlock()
+	return mock.ExplainFunc(ctx, documentID, search)
+}
+
+// ExplainCalls gets all the calls that were made to Explain.
+// Check the length with:
+//
+//	len(mockedElasticSearch.ExplainCalls())
+func (mock *ElasticSearchMock) ExplainCalls() []struct {
+	Ctx        context.Context
+	DocumentID string
+	Search     dpelasticsearch.Search
+} {
+	var calls []struct {
+		Ctx        context.Context
+		DocumentID string
+		Search     dpelasticsearch.Search
+	}
+	mock.lockExplain.RLock()
+	calls = mock.calls.Explain
+	mock.lockExplain.RUnlock()
+	return calls
+}
+
 // GetAlias calls GetAliasFunc.
 func (mock *ElasticSearchMock) GetAlias(ctx context.Context) ([]byte, error) {
 	if mock.GetAliasFunc == nil {
@@ -684,21 +804,23 @@ func (mock *ElasticSearchMock) GetIndicesCalls() []struct {
 }
 
 // MultiSearch calls MultiSearchFunc.
-func (mock *ElasticSearchMock) MultiSearch(ctx context.Context, searches []dpelasticsearch.Search) ([]byte, error) {
+func (mock *ElasticSearchMock) MultiSearch(ctx context.Context, searches []dpelasticsearch.Search, queryParams *dpelasticsearch.QueryParams) ([]byte, error) {
 	if mock.MultiSearchFunc == nil {
 		panic("ElasticSearchMock.MultiSearchFunc: method is nil but ElasticSearch.MultiSearch was just called")
 	}
 	callInfo := struct {
-		Ctx      context.Context
-		Searches []dpelasticsearch.Search
+		Ctx         context.Context
+		Searches    []dpelasticsearch.Search
+		QueryParams *dpelasticsearch.QueryParams
 	}{
-		Ctx:      ctx,
-		Searches: searches,
+		Ctx:         ctx,
+		Searches:    searches,
+		QueryParams: queryParams,
 	}
 	mock.lockMultiSearch.Lock()
 	mock.calls.MultiSearch = append(mock.calls.MultiSearch, callInfo)
 	mock.lockMultiSearch.Unlock()
-	return mock.MultiSearchFunc(ctx, searches)
+	return mock.MultiSearchFunc(ctx, searches, queryParams)
 }
 
 // MultiSearchCalls gets all the calls that were made to MultiSearch.
@@ -706,12 +828,14 @@ func (mock *ElasticSearchMock) MultiSearch(ctx context.Context, searches []dpela
 //
 //	len(mockedElasticSearch.MultiSearchCalls())
 func (mock *ElasticSearchMock) MultiSearchCalls() []struct {
-	Ctx      context.Context
-	Searches []dpelasticsearch.Search
+	Ctx         context.Context
+	Searches    []dpelasticsearch.Search
+	QueryParams *dpelasticsearch.QueryParams
 } {
 	var calls []struct {
-		Ctx      context.Context
-		Searches []dpelasticsearch.Search
+		Ctx         context.Context
+		Searches    []dpelasticsearch.Search
+		QueryParams *dpelasticsearch.QueryParams
 	}
 	mock.lockMultiSearch.RLock()
 	calls = mock.calls.MultiSearch

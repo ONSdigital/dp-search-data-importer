@@ -38,7 +38,6 @@ Feature: Search data imported to elasticsearch
         ]
       }
     """
-
     Then this model is sent to elasticsearch
     """
       {
