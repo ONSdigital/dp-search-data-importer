@@ -53,3 +53,7 @@ type PopulationType struct {
 	Name   string `avro:"name"`
 	Label  string `avro:"label"`
 }
+
+type DeleteEvent struct {
+	URI string `avro:"uri" json:"uri"`
+}

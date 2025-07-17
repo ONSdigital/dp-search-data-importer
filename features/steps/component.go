@@ -31,15 +31,16 @@ var (
 
 type Component struct {
 	componenttest.ErrorFeature
-	ElasticsearchAPI *httpfake.HTTPFake  // Elasticsearch API mock at HTTP level
-	KafkaConsumer    *kafkatest.Consumer // Mock for service kafka consumer
-	errorChan        chan error
-	svc              *service.Service
-	cfg              *config.Config
-	wg               *sync.WaitGroup
-	signals          chan os.Signal
-	waitEventTimeout time.Duration
-	ctx              context.Context
+	ElasticsearchAPI     *httpfake.HTTPFake // Elasticsearch API mock at HTTP level
+	KafkaPublishConsumer *kafkatest.Consumer
+	KafkaDeleteConsumer  *kafkatest.Consumer
+	errorChan            chan error
+	svc                  *service.Service
+	cfg                  *config.Config
+	wg                   *sync.WaitGroup
+	signals              chan os.Signal
+	waitEventTimeout     time.Duration
+	ctx                  context.Context
 }
 
 func NewComponent(t *testing.T) *Component {
@@ -137,21 +138,45 @@ func (c *Component) Reset() error {
 // GetKafkaConsumer creates a new kafkatest consumer and stores it to the caller Component struct
 // It returns the mock, so it can be used by the service under test.
 // If there is any error creating the mock, it is also returned to the service.
-func (c *Component) GetKafkaConsumer(ctx context.Context, cfg *config.Kafka) (kafka.IConsumerGroup, error) {
-	var err error
-	c.KafkaConsumer, err = kafkatest.NewConsumer(
-		c.ctx,
-		&kafka.ConsumerGroupConfig{
-			BrokerAddrs:       cfg.Addr,
-			Topic:             cfg.PublishedContentTopic,
-			GroupName:         cfg.PublishedContentGroup,
-			MinBrokersHealthy: &cfg.ConsumerMinBrokersHealthy,
-			KafkaVersion:      &cfg.Version,
-		},
-		nil,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create kafkatest consumer: %w", err)
+func (c *Component) GetKafkaConsumer(ctx context.Context, cfg *config.Kafka, topic, group string) (kafka.IConsumerGroup, error) {
+	switch topic {
+	case cfg.PublishedContentTopic:
+		var err error
+		c.KafkaPublishConsumer, err = kafkatest.NewConsumer(
+			c.ctx,
+			&kafka.ConsumerGroupConfig{
+				BrokerAddrs:       cfg.Addr,
+				Topic:             topic,
+				GroupName:         group,
+				MinBrokersHealthy: &cfg.ConsumerMinBrokersHealthy,
+				KafkaVersion:      &cfg.Version,
+			},
+			nil,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create publish kafkatest consumer: %w", err)
+		}
+		return c.KafkaPublishConsumer.Mock, nil
+
+	case cfg.DeletedContentTopic:
+		var err error
+		c.KafkaDeleteConsumer, err = kafkatest.NewConsumer(
+			c.ctx,
+			&kafka.ConsumerGroupConfig{
+				BrokerAddrs:       cfg.Addr,
+				Topic:             topic,
+				GroupName:         group,
+				MinBrokersHealthy: &cfg.ConsumerMinBrokersHealthy,
+				KafkaVersion:      &cfg.Version,
+			},
+			nil,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create delete kafkatest consumer: %w", err)
+		}
+		return c.KafkaDeleteConsumer.Mock, nil
+
+	default:
+		return nil, fmt.Errorf("unexpected topic: %s", topic)
 	}
-	return c.KafkaConsumer.Mock, nil
 }

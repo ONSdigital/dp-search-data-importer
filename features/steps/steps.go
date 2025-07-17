@@ -21,6 +21,9 @@ func (c *Component) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^this search-data-import event is queued, to be consumed$`, c.thisSearchDataImportEventIsQueued)
 	ctx.Step(`^nothing is sent to elasticsearch`, c.notingSentToElasticsearch)
 	ctx.Step(`^this model is sent to elasticsearch$`, c.thisModelIsSentToElasticsearch)
+	ctx.Step(`^this delete event is queued, to be consumed$`, c.thisDeleteEventIsQueued)
+	ctx.Step(`^this delete query is sent to elasticsearch$`, c.thisDeleteQueryIsSentToElasticsearch)
+
 }
 
 // theServiceStarts starts the service under test in a new go-routine
@@ -112,8 +115,65 @@ func (c *Component) thisSearchDataImportEventIsQueued(eventDocString *godog.DocS
 		return fmt.Errorf("failed to unmarshal docstring to search data import event: %w", err)
 	}
 
-	if err := c.KafkaConsumer.QueueMessage(schema.SearchDataImportEvent, event); err != nil {
+	if err := c.KafkaPublishConsumer.QueueMessage(schema.SearchDataImportEvent, event); err != nil {
 		return fmt.Errorf("failed to queue event for testing: %w", err)
+	}
+	return nil
+}
+
+func (c *Component) thisDeleteEventIsQueued(eventDocString *godog.DocString) error {
+	event := &models.DeleteEvent{}
+	if err := json.Unmarshal([]byte(eventDocString.Content), event); err != nil {
+		return fmt.Errorf("failed to unmarshal docstring to delete event: %w", err)
+	}
+
+	if err := c.KafkaDeleteConsumer.QueueMessage(schema.SearchContentDeletedEvent, event); err != nil {
+		return fmt.Errorf("failed to queue delete event for testing: %w", err)
+	}
+	return nil
+}
+
+//func (c *Component) thisDeleteQueryIsSentToElasticsearch(expected *godog.DocString) error {
+//	b := []byte(expected.Content)
+//
+//	esa, err := NewAssertor(b)
+//	if err != nil {
+//		return fmt.Errorf("failed to create elasticsearch assertor: %w", err)
+//	}
+//
+//	ok := false
+//	for _, h := range c.ElasticsearchAPI.RequestHandlers {
+//		if h.Method == http.MethodPost && h.URL.Path == "/ons/_delete_by_query" {
+//			h.AssertCustom(esa)
+//			ok = true
+//			break
+//		}
+//	}
+//
+//	if err := waitForElasticsearchCall(WaitEventTimeout, esa); err != nil {
+//		return fmt.Errorf("error validating call to elasticsearch: %w", err)
+//	}
+//
+//	if !ok {
+//		return errors.New("no response defined for elasticsearch POST /ons/_delete_by_query")
+//	}
+//	return nil
+//}
+
+func (c *Component) thisDeleteQueryIsSentToElasticsearch(doc *godog.DocString) error {
+	expected := []byte(doc.Content)
+
+	esa, err := NewAssertor(expected)
+	if err != nil {
+		return fmt.Errorf("failed to create elasticsearch assertor: %w", err)
+	}
+
+	c.ElasticsearchAPI.NewHandler().
+		Post("/ons/_delete_by_query").
+		AssertCustom(esa)
+
+	if err := waitForElasticsearchCall(WaitEventTimeout, esa); err != nil {
+		return fmt.Errorf("error validating delete-by-query call to elasticsearch: %w", err)
 	}
 	return nil
 }

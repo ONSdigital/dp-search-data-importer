@@ -54,13 +54,24 @@ func TestInit(t *testing.T) {
 			return elasticSearchMock, nil
 		}
 
-		consumerMock := &kafkatest.IConsumerGroupMock{
+		publishConsumerMock := &kafkatest.IConsumerGroupMock{
 			RegisterBatchHandlerFunc: func(ctx context.Context, batchHandler kafka.BatchHandler) error {
 				return nil
 			},
 		}
-		service.GetKafkaConsumer = func(ctx context.Context, cfg *config.Kafka) (kafka.IConsumerGroup, error) {
-			return consumerMock, nil
+		deleteConsumerMock := &kafkatest.IConsumerGroupMock{
+			RegisterBatchHandlerFunc: func(ctx context.Context, batchHandler kafka.BatchHandler) error {
+				return nil
+			},
+		}
+
+		i := 0
+		service.GetKafkaConsumer = func(ctx context.Context, cfg *config.Kafka, topic, group string) (kafka.IConsumerGroup, error) {
+			if i == 0 {
+				i++
+				return publishConsumerMock, nil
+			}
+			return deleteConsumerMock, nil
 		}
 
 		subscribedTo := []*healthcheck.Check{}
@@ -106,7 +117,12 @@ func TestInit(t *testing.T) {
 		})
 
 		Convey("Given that initialising Kafka consumer returns an error", func() {
-			service.GetKafkaConsumer = func(ctx context.Context, cfg *config.Kafka) (kafka.IConsumerGroup, error) {
+			i := 0
+			service.GetKafkaConsumer = func(ctx context.Context, cfg *config.Kafka, topic, group string) (kafka.IConsumerGroup, error) {
+				if i == 0 {
+					i++
+					return publishConsumerMock, nil
+				}
 				return nil, errKafkaConsumer
 			}
 
@@ -122,7 +138,7 @@ func TestInit(t *testing.T) {
 		})
 
 		Convey("Given that Kafka consumer fails to register a batch handler", func() {
-			consumerMock.RegisterBatchHandlerFunc = func(ctx context.Context, batchHandler kafka.BatchHandler) error {
+			publishConsumerMock.RegisterBatchHandlerFunc = func(ctx context.Context, batchHandler kafka.BatchHandler) error {
 				return errKafkaConsumer
 			}
 
@@ -146,7 +162,7 @@ func TestInit(t *testing.T) {
 				err := svc.Init(ctx, cfg, testBuildTime, testGitCommit, testVersion)
 				So(errors.Unwrap(err), ShouldResemble, errHealthcheck)
 				So(svc.Cfg, ShouldResemble, cfg)
-				So(svc.Consumer, ShouldResemble, consumerMock)
+				So(svc.PublishConsumer, ShouldResemble, publishConsumerMock)
 
 				Convey("And no checkers are registered ", func() {
 					So(hcMock.AddAndGetCheckCalls(), ShouldHaveLength, 0)
@@ -163,10 +179,10 @@ func TestInit(t *testing.T) {
 				So(err, ShouldNotBeNil)
 				So(err.Error(), ShouldEqual, "unable to register checkers: Error(s) registering checkers for healthcheck")
 				So(svc.Cfg, ShouldResemble, cfg)
-				So(svc.Consumer, ShouldResemble, consumerMock)
+				So(svc.PublishConsumer, ShouldResemble, publishConsumerMock)
 
 				Convey("And all other checkers try to register", func() {
-					So(hcMock.AddAndGetCheckCalls(), ShouldHaveLength, 2)
+					So(hcMock.AddAndGetCheckCalls(), ShouldHaveLength, 3)
 				})
 			})
 		})
@@ -178,23 +194,25 @@ func TestInit(t *testing.T) {
 				So(svc.Cfg, ShouldResemble, cfg)
 				So(svc.Server, ShouldEqual, serverMock)
 				So(svc.HealthCheck, ShouldResemble, hcMock)
-				So(svc.Consumer, ShouldResemble, consumerMock)
+				So(svc.PublishConsumer, ShouldResemble, publishConsumerMock)
 				So(svc.EsCli, ShouldResemble, elasticSearchMock)
 
 				Convey("Then all checks are registered", func() {
-					So(hcMock.AddAndGetCheckCalls(), ShouldHaveLength, 2)
-					So(hcMock.AddAndGetCheckCalls()[0].Name, ShouldResemble, "Elasticsearch")
-					So(hcMock.AddAndGetCheckCalls()[1].Name, ShouldResemble, "Kafka consumer")
+					So(hcMock.AddAndGetCheckCalls(), ShouldHaveLength, 3)
+					So(hcMock.AddAndGetCheckCalls()[0].Name, ShouldEqual, "Elasticsearch")
+					So(hcMock.AddAndGetCheckCalls()[1].Name, ShouldEqual, "Kafka publish consumer")
+					So(hcMock.AddAndGetCheckCalls()[2].Name, ShouldEqual, "Kafka delete consumer")
+
 				})
 
 				Convey("Then kafka consumer subscribes to the expected healthcheck checks", func() {
-					So(subscribedTo, ShouldHaveLength, 1)
-					So(hcMock.SubscribeCalls(), ShouldHaveLength, 1)
+					So(subscribedTo, ShouldHaveLength, 2)
+					So(hcMock.SubscribeCalls(), ShouldHaveLength, 2)
 					So(hcMock.SubscribeCalls()[0].Checks, ShouldContain, testChecks["Elasticsearch client"])
 				})
 
 				Convey("Then the batch handler is registered to the kafka consumer", func() {
-					So(consumerMock.RegisterBatchHandlerCalls(), ShouldHaveLength, 1)
+					So(publishConsumerMock.RegisterBatchHandlerCalls(), ShouldHaveLength, 1)
 				})
 			})
 		})
@@ -220,11 +238,12 @@ func TestStart(t *testing.T) {
 		serverMock := &mock.HTTPServerMock{}
 
 		svc := &service.Service{
-			Cfg:         cfg,
-			Server:      serverMock,
-			HealthCheck: hcMock,
-			Consumer:    consumerMock,
-			EsCli:       elasticSearchMock,
+			Cfg:             cfg,
+			Server:          serverMock,
+			HealthCheck:     hcMock,
+			PublishConsumer: consumerMock,
+			DeleteConsumer:  consumerMock,
+			EsCli:           elasticSearchMock,
 		}
 
 		Convey("When a service with a successful HTTP server is started", func() {
@@ -252,7 +271,7 @@ func TestStart(t *testing.T) {
 			So(err, ShouldBeNil)
 
 			Convey("Then the kafka consumer is manually started", func() {
-				So(consumerMock.StartCalls(), ShouldHaveLength, 1)
+				So(consumerMock.StartCalls(), ShouldHaveLength, 2)
 			})
 		})
 
@@ -318,8 +337,9 @@ func TestClose(t *testing.T) {
 		}
 
 		svc := service.Service{
-			Cfg:      cfg,
-			Consumer: consumerMock,
+			Cfg:             cfg,
+			PublishConsumer: consumerMock,
+			DeleteConsumer:  consumerMock,
 		}
 
 		Convey("Then the service fails to close due to a timeout error", func() {
@@ -338,10 +358,11 @@ func TestClose(t *testing.T) {
 		serverMock := &mock.HTTPServerMock{}
 
 		svc := &service.Service{
-			Cfg:         cfg,
-			Server:      serverMock,
-			HealthCheck: hcMock,
-			Consumer:    consumerMock,
+			Cfg:             cfg,
+			Server:          serverMock,
+			HealthCheck:     hcMock,
+			PublishConsumer: consumerMock,
+			DeleteConsumer:  consumerMock,
 		}
 
 		Convey("And all mocks can successfully close, if done in the right order", func() {
@@ -362,9 +383,9 @@ func TestClose(t *testing.T) {
 				So(err, ShouldBeNil)
 
 				Convey("And all the dependencies are closed", func() {
-					So(consumerMock.StopAndWaitCalls(), ShouldHaveLength, 1)
+					So(consumerMock.StopAndWaitCalls(), ShouldHaveLength, 2)
 					So(hcMock.StopCalls(), ShouldHaveLength, 1)
-					So(consumerMock.CloseCalls(), ShouldHaveLength, 1)
+					So(consumerMock.CloseCalls(), ShouldHaveLength, 2)
 					So(serverMock.ShutdownCalls(), ShouldHaveLength, 1)
 				})
 			})
@@ -382,9 +403,9 @@ func TestClose(t *testing.T) {
 				So(err.Error(), ShouldEqual, "failed to shutdown gracefully")
 
 				Convey("And all the dependencies are closed", func() {
-					So(consumerMock.StopAndWaitCalls(), ShouldHaveLength, 1)
+					So(consumerMock.StopAndWaitCalls(), ShouldHaveLength, 2)
 					So(hcMock.StopCalls(), ShouldHaveLength, 1)
-					So(consumerMock.CloseCalls(), ShouldHaveLength, 1)
+					So(consumerMock.CloseCalls(), ShouldHaveLength, 2)
 					So(serverMock.ShutdownCalls(), ShouldHaveLength, 1)
 				})
 			})

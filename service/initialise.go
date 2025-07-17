@@ -38,7 +38,7 @@ var GetHealthCheck = func(cfg *config.Config, buildTime, gitCommit, version stri
 }
 
 // GetKafkaConsumer returns a Kafka Consumer group
-var GetKafkaConsumer = func(ctx context.Context, cfg *config.Kafka) (kafka.IConsumerGroup, error) {
+var GetKafkaConsumer = func(ctx context.Context, cfg *config.Kafka, topic, group string) (kafka.IConsumerGroup, error) {
 	if cfg == nil {
 		return nil, errors.New("cannot create a kafka consumer without kafka config")
 	}
@@ -48,8 +48,8 @@ var GetKafkaConsumer = func(ctx context.Context, cfg *config.Kafka) (kafka.ICons
 	}
 	cgConfig := &kafka.ConsumerGroupConfig{
 		BrokerAddrs:       cfg.Addr,
-		Topic:             cfg.PublishedContentTopic,
-		GroupName:         cfg.PublishedContentGroup,
+		Topic:             topic,
+		GroupName:         group,
 		MinBrokersHealthy: &cfg.ConsumerMinBrokersHealthy,
 		KafkaVersion:      &cfg.Version,
 		Offset:            &kafkaOffset,

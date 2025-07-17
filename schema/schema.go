@@ -64,3 +64,16 @@ var searchDataImportEvent = `{
 var SearchDataImportEvent = &avro.Schema{
 	Definition: searchDataImportEvent,
 }
+
+var searchContentDeletedEvent = `{
+  "type": "record",
+  "name": "search-content-deleted",
+  "fields": [
+    {"name": "uri", "type": "string", "default": ""}
+  ]
+}`
+
+// SearchContentDeletedEvent is the Avro schema for Search Content Deleted messages.
+var SearchContentDeletedEvent = &avro.Schema{
+	Definition: searchContentDeletedEvent,
+}

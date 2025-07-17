@@ -45,6 +45,12 @@ var _ service.ElasticSearch = &ElasticSearchMock{}
 //			CreateIndexFunc: func(ctx context.Context, indexName string, indexSettings []byte) error {
 //				panic("mock out the CreateIndex method")
 //			},
+//			DeleteDocumentFunc: func(ctx context.Context, indexName string, documentID string) error {
+//				panic("mock out the DeleteDocument method")
+//			},
+//			DeleteDocumentByQueryFunc: func(ctx context.Context, search dpelasticsearch.Search) error {
+//				panic("mock out the DeleteDocumentByQuery method")
+//			},
 //			DeleteIndexFunc: func(ctx context.Context, indexName string) error {
 //				panic("mock out the DeleteIndex method")
 //			},
@@ -102,6 +108,12 @@ type ElasticSearchMock struct {
 
 	// CreateIndexFunc mocks the CreateIndex method.
 	CreateIndexFunc func(ctx context.Context, indexName string, indexSettings []byte) error
+
+	// DeleteDocumentFunc mocks the DeleteDocument method.
+	DeleteDocumentFunc func(ctx context.Context, indexName string, documentID string) error
+
+	// DeleteDocumentByQueryFunc mocks the DeleteDocumentByQuery method.
+	DeleteDocumentByQueryFunc func(ctx context.Context, search dpelasticsearch.Search) error
 
 	// DeleteIndexFunc mocks the DeleteIndex method.
 	DeleteIndexFunc func(ctx context.Context, indexName string) error
@@ -208,6 +220,22 @@ type ElasticSearchMock struct {
 			// IndexSettings is the indexSettings argument value.
 			IndexSettings []byte
 		}
+		// DeleteDocument holds details about calls to the DeleteDocument method.
+		DeleteDocument []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// IndexName is the indexName argument value.
+			IndexName string
+			// DocumentID is the documentID argument value.
+			DocumentID string
+		}
+		// DeleteDocumentByQuery holds details about calls to the DeleteDocumentByQuery method.
+		DeleteDocumentByQuery []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Search is the search argument value.
+			Search dpelasticsearch.Search
+		}
 		// DeleteIndex holds details about calls to the DeleteIndex method.
 		DeleteIndex []struct {
 			// Ctx is the ctx argument value.
@@ -276,23 +304,25 @@ type ElasticSearchMock struct {
 			AddIndices []string
 		}
 	}
-	lockAddDocument    sync.RWMutex
-	lockBulkIndexAdd   sync.RWMutex
-	lockBulkIndexClose sync.RWMutex
-	lockBulkUpdate     sync.RWMutex
-	lockChecker        sync.RWMutex
-	lockCount          sync.RWMutex
-	lockCountIndices   sync.RWMutex
-	lockCreateIndex    sync.RWMutex
-	lockDeleteIndex    sync.RWMutex
-	lockDeleteIndices  sync.RWMutex
-	lockExplain        sync.RWMutex
-	lockGetAlias       sync.RWMutex
-	lockGetIndices     sync.RWMutex
-	lockMultiSearch    sync.RWMutex
-	lockNewBulkIndexer sync.RWMutex
-	lockSearch         sync.RWMutex
-	lockUpdateAliases  sync.RWMutex
+	lockAddDocument           sync.RWMutex
+	lockBulkIndexAdd          sync.RWMutex
+	lockBulkIndexClose        sync.RWMutex
+	lockBulkUpdate            sync.RWMutex
+	lockChecker               sync.RWMutex
+	lockCount                 sync.RWMutex
+	lockCountIndices          sync.RWMutex
+	lockCreateIndex           sync.RWMutex
+	lockDeleteDocument        sync.RWMutex
+	lockDeleteDocumentByQuery sync.RWMutex
+	lockDeleteIndex           sync.RWMutex
+	lockDeleteIndices         sync.RWMutex
+	lockExplain               sync.RWMutex
+	lockGetAlias              sync.RWMutex
+	lockGetIndices            sync.RWMutex
+	lockMultiSearch           sync.RWMutex
+	lockNewBulkIndexer        sync.RWMutex
+	lockSearch                sync.RWMutex
+	lockUpdateAliases         sync.RWMutex
 }
 
 // AddDocument calls AddDocumentFunc.
@@ -620,6 +650,82 @@ func (mock *ElasticSearchMock) CreateIndexCalls() []struct {
 	mock.lockCreateIndex.RLock()
 	calls = mock.calls.CreateIndex
 	mock.lockCreateIndex.RUnlock()
+	return calls
+}
+
+// DeleteDocument calls DeleteDocumentFunc.
+func (mock *ElasticSearchMock) DeleteDocument(ctx context.Context, indexName string, documentID string) error {
+	if mock.DeleteDocumentFunc == nil {
+		panic("ElasticSearchMock.DeleteDocumentFunc: method is nil but ElasticSearch.DeleteDocument was just called")
+	}
+	callInfo := struct {
+		Ctx        context.Context
+		IndexName  string
+		DocumentID string
+	}{
+		Ctx:        ctx,
+		IndexName:  indexName,
+		DocumentID: documentID,
+	}
+	mock.lockDeleteDocument.Lock()
+	mock.calls.DeleteDocument = append(mock.calls.DeleteDocument, callInfo)
+	mock.lockDeleteDocument.Unlock()
+	return mock.DeleteDocumentFunc(ctx, indexName, documentID)
+}
+
+// DeleteDocumentCalls gets all the calls that were made to DeleteDocument.
+// Check the length with:
+//
+//	len(mockedElasticSearch.DeleteDocumentCalls())
+func (mock *ElasticSearchMock) DeleteDocumentCalls() []struct {
+	Ctx        context.Context
+	IndexName  string
+	DocumentID string
+} {
+	var calls []struct {
+		Ctx        context.Context
+		IndexName  string
+		DocumentID string
+	}
+	mock.lockDeleteDocument.RLock()
+	calls = mock.calls.DeleteDocument
+	mock.lockDeleteDocument.RUnlock()
+	return calls
+}
+
+// DeleteDocumentByQuery calls DeleteDocumentByQueryFunc.
+func (mock *ElasticSearchMock) DeleteDocumentByQuery(ctx context.Context, search dpelasticsearch.Search) error {
+	if mock.DeleteDocumentByQueryFunc == nil {
+		panic("ElasticSearchMock.DeleteDocumentByQueryFunc: method is nil but ElasticSearch.DeleteDocumentByQuery was just called")
+	}
+	callInfo := struct {
+		Ctx    context.Context
+		Search dpelasticsearch.Search
+	}{
+		Ctx:    ctx,
+		Search: search,
+	}
+	mock.lockDeleteDocumentByQuery.Lock()
+	mock.calls.DeleteDocumentByQuery = append(mock.calls.DeleteDocumentByQuery, callInfo)
+	mock.lockDeleteDocumentByQuery.Unlock()
+	return mock.DeleteDocumentByQueryFunc(ctx, search)
+}
+
+// DeleteDocumentByQueryCalls gets all the calls that were made to DeleteDocumentByQuery.
+// Check the length with:
+//
+//	len(mockedElasticSearch.DeleteDocumentByQueryCalls())
+func (mock *ElasticSearchMock) DeleteDocumentByQueryCalls() []struct {
+	Ctx    context.Context
+	Search dpelasticsearch.Search
+} {
+	var calls []struct {
+		Ctx    context.Context
+		Search dpelasticsearch.Search
+	}
+	mock.lockDeleteDocumentByQuery.RLock()
+	calls = mock.calls.DeleteDocumentByQuery
+	mock.lockDeleteDocumentByQuery.RUnlock()
 	return calls
 }
 

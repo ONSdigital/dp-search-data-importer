@@ -15,11 +15,12 @@ import (
 
 // Service contains all the configs, server and clients to run the event handler service
 type Service struct {
-	Cfg         *config.Config
-	Server      HTTPServer
-	HealthCheck HealthChecker
-	Consumer    dpkafka.IConsumerGroup
-	EsCli       dpelasticsearch.Client
+	Cfg             *config.Config
+	Server          HTTPServer
+	HealthCheck     HealthChecker
+	PublishConsumer dpkafka.IConsumerGroup
+	DeleteConsumer  dpkafka.IConsumerGroup
+	EsCli           dpelasticsearch.Client
 }
 
 func New() *Service {
@@ -40,15 +41,26 @@ func (svc *Service) Init(ctx context.Context, cfg *config.Config, buildTime, git
 		return fmt.Errorf("failed to initialise elastic search client: %w", err)
 	}
 
-	// Get Kafka consumer
-	if svc.Consumer, err = GetKafkaConsumer(ctx, cfg.Kafka); err != nil {
-		return fmt.Errorf("failed to create kafka consumer: %w", err)
+	// Create publish consumer
+	if svc.PublishConsumer, err = GetKafkaConsumer(ctx, cfg.Kafka, cfg.Kafka.PublishedContentTopic, cfg.Kafka.PublishedContentGroup); err != nil {
+		return fmt.Errorf("failed to create kafka publish consumer: %w", err)
 	}
 
-	// Create batch handler and register it to the kafka consumer
-	h := handler.NewBatchHandler(svc.EsCli, cfg)
-	if err := svc.Consumer.RegisterBatchHandler(ctx, h.Handle); err != nil {
-		return fmt.Errorf("failed to register batch handler: %w", err)
+	// Create delete consumer
+	if svc.DeleteConsumer, err = GetKafkaConsumer(ctx, cfg.Kafka, cfg.Kafka.DeletedContentTopic, cfg.Kafka.PublishedContentGroup); err != nil {
+		return fmt.Errorf("failed to create kafka delete consumer: %w", err)
+	}
+
+	// Create publish batch handler and register it to the kafka publish consumer
+	publishHandler := handler.NewBatchHandler(svc.EsCli, cfg)
+	if err := svc.PublishConsumer.RegisterBatchHandler(ctx, publishHandler.Publish); err != nil {
+		return fmt.Errorf("failed to register batch publish handler: %w", err)
+	}
+
+	// Create delete batch handler and register it to the kafka delete consumer
+	deleteHandler := handler.NewBatchHandler(svc.EsCli, cfg)
+	if err := svc.DeleteConsumer.RegisterBatchHandler(ctx, deleteHandler.Delete); err != nil {
+		return fmt.Errorf("failed to register batch delete handler: %w", err)
 	}
 
 	// Get HealthCheck
@@ -74,12 +86,17 @@ func (svc *Service) Start(ctx context.Context, svcErrors chan error) error {
 	log.Info(ctx, "starting service")
 
 	// Kafka error logging go-routine
-	svc.Consumer.LogErrors(ctx)
+	svc.PublishConsumer.LogErrors(ctx)
+	svc.DeleteConsumer.LogErrors(ctx)
 
 	// If start/stop on health updates is disabled, start consuming as soon as possible
 	if !svc.Cfg.StopConsumingOnUnhealthy {
-		if err := svc.Consumer.Start(); err != nil {
+		if err := svc.PublishConsumer.Start(); err != nil {
 			return fmt.Errorf("consumer failed to start: %w", err)
+		}
+
+		if err := svc.DeleteConsumer.Start(); err != nil {
+			return fmt.Errorf("delete consumer failed to start: %w", err)
 		}
 	}
 
@@ -121,13 +138,23 @@ func (svc *Service) Close(ctx context.Context) error {
 		// Note that any remaining batch will be consumed and 'StopAndWait' will wait until this happens.
 		// The kafka consumer will be closed after the service shuts down.
 		//nolint
-		if svc.Consumer != nil {
+		if svc.PublishConsumer != nil {
 			log.Info(ctx, "stopping kafka consumer listener...")
-			if err := svc.Consumer.StopAndWait(); err != nil {
+			if err := svc.PublishConsumer.StopAndWait(); err != nil {
 				log.Error(ctx, "error stopping kafka consumer listener", err)
 				hasShutdownError = true
 			} else {
 				log.Info(ctx, "stopped kafka consumer listener")
+			}
+		}
+
+		if svc.DeleteConsumer != nil {
+			log.Info(ctx, "stopping kafka delete consumer listener...")
+			if err := svc.DeleteConsumer.StopAndWait(); err != nil {
+				log.Error(ctx, "error stopping kafka delete consumer listener", err)
+				hasShutdownError = true
+			} else {
+				log.Info(ctx, "stopped kafka delete consumer listener")
 			}
 		}
 
@@ -144,13 +171,23 @@ func (svc *Service) Close(ctx context.Context) error {
 
 		// If kafka consumer exists, close it.
 		//nolint
-		if svc.Consumer != nil {
+		if svc.PublishConsumer != nil {
 			log.Info(ctx, "closing kafka consumer")
-			if err := svc.Consumer.Close(ctx); err != nil {
+			if err := svc.PublishConsumer.Close(ctx); err != nil {
 				log.Error(ctx, "failed to close kafka consumer", err)
 				hasShutdownError = true
 			} else {
 				log.Info(ctx, "closed kafka consumer")
+			}
+		}
+
+		if svc.DeleteConsumer != nil {
+			log.Info(ctx, "closing kafka delete consumer")
+			if err := svc.DeleteConsumer.Close(ctx); err != nil {
+				log.Error(ctx, "failed to close kafka delete consumer", err)
+				hasShutdownError = true
+			} else {
+				log.Info(ctx, "closed kafka delete consumer")
 			}
 		}
 	}()
@@ -181,9 +218,14 @@ func (svc *Service) registerCheckers(ctx context.Context) error {
 		hasErrors = true
 	}
 
-	if _, err = svc.HealthCheck.AddAndGetCheck("Kafka consumer", svc.Consumer.Checker); err != nil {
+	if _, err = svc.HealthCheck.AddAndGetCheck("Kafka publish consumer", svc.PublishConsumer.Checker); err != nil {
 		hasErrors = true
-		log.Error(ctx, "error adding check for Kafka", err)
+		log.Error(ctx, "error adding check for Kafka publish consumer", err)
+	}
+
+	if _, err = svc.HealthCheck.AddAndGetCheck("Kafka delete consumer", svc.DeleteConsumer.Checker); err != nil {
+		hasErrors = true
+		log.Error(ctx, "error adding check for Kafka delete consumer", err)
 	}
 
 	if hasErrors {
@@ -191,7 +233,8 @@ func (svc *Service) registerCheckers(ctx context.Context) error {
 	}
 
 	if svc.Cfg.StopConsumingOnUnhealthy {
-		svc.HealthCheck.Subscribe(svc.Consumer, chkElasticSearch)
+		svc.HealthCheck.Subscribe(svc.PublishConsumer, chkElasticSearch)
+		svc.HealthCheck.Subscribe(svc.DeleteConsumer, chkElasticSearch)
 	}
 
 	return nil

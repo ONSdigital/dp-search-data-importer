@@ -33,7 +33,7 @@ func NewBatchHandler(esClient dpelasticsearch.Client, cfg *config.Config) *Batch
 	}
 }
 
-func (h *BatchHandler) Handle(ctx context.Context, batch []kafka.Message) error {
+func (h *BatchHandler) Publish(ctx context.Context, batch []kafka.Message) error {
 	// no events received. Nothing more to do (this scenario should not happen)
 	if len(batch) == 0 {
 		log.Info(ctx, "there are no events to handle")
@@ -152,4 +152,64 @@ func prepareEventForBulkUpsertRequestBody(ctx context.Context, sdModel *models.S
 		bulkbody = append(bulkbody, []byte("\n")...)
 	}
 	return bulkbody, nil
+}
+
+func (h *BatchHandler) Delete(ctx context.Context, batch []kafka.Message) error {
+	if len(batch) == 0 {
+		log.Info(ctx, "no delete events to handle")
+		return nil
+	}
+
+	events := make([]*models.DeleteEvent, len(batch))
+	s := schema.SearchContentDeletedEvent
+
+	// Step 1: Unmarshal all delete events
+	for i, msg := range batch {
+		e := &models.DeleteEvent{}
+		if err := s.Unmarshal(msg.GetData(), e); err != nil {
+			return &Error{
+				err: fmt.Errorf("failed to unmarshal event: %w", err),
+				logData: map[string]interface{}{
+					"msg_data": string(msg.GetData()),
+				},
+			}
+		}
+		events[i] = e
+	}
+	log.Info(ctx, "batch of delete events received", log.Data{"count": len(events)})
+
+	// Step 2: Perform individual delete-by-query per event
+	for _, event := range events {
+		query := map[string]interface{}{
+			"query": map[string]interface{}{
+				"term": map[string]interface{}{
+					"uri": event.URI,
+				},
+			},
+		}
+
+		queryBytes, err := json.Marshal(query)
+		if err != nil {
+			return &Error{
+				err:     fmt.Errorf("failed to marshal delete query for uri %q: %w", event.URI, err),
+				logData: log.Data{"uri": event.URI},
+			}
+		}
+
+		search := dpelasticsearch.Search{
+			Header: dpelasticsearch.Header{Index: "ons"},
+			Query:  queryBytes,
+		}
+
+		if err := h.esClient.DeleteDocumentByQuery(ctx, search); err != nil {
+			return &Error{
+				err:     fmt.Errorf("failed to delete document for uri %q: %w", event.URI, err),
+				logData: log.Data{"uri": event.URI},
+			}
+		}
+
+		log.Info(ctx, "successfully deleted document by uri", log.Data{"uri": event.URI})
+	}
+
+	return nil
 }
