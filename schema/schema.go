@@ -69,7 +69,21 @@ var searchContentDeletedEvent = `{
   "type": "record",
   "name": "search-content-deleted",
   "fields": [
-    {"name": "uri", "type": "string", "default": ""}
+    {
+      "name": "uri", 
+	  "type": "string", 
+	  "default": ""
+	},
+    {
+      "name": "search_index",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "trace_id",
+      "type": "string",
+      "default": ""
+    }
   ]
 }`
 

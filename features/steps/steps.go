@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/ONSdigital/dp-search-data-importer/models"
@@ -22,7 +23,7 @@ func (c *Component) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^nothing is sent to elasticsearch`, c.notingSentToElasticsearch)
 	ctx.Step(`^this model is sent to elasticsearch$`, c.thisModelIsSentToElasticsearch)
 	ctx.Step(`^this delete event is queued, to be consumed$`, c.thisDeleteEventIsQueued)
-	ctx.Step(`^this delete query is sent to elasticsearch$`, c.thisDeleteQueryIsSentToElasticsearch)
+	ctx.Step(`^this delete request is sent to elasticsearch$`, c.thisDeleteRequestIsSentToElasticsearch)
 
 }
 
@@ -133,49 +134,24 @@ func (c *Component) thisDeleteEventIsQueued(eventDocString *godog.DocString) err
 	return nil
 }
 
-//func (c *Component) thisDeleteQueryIsSentToElasticsearch(expected *godog.DocString) error {
-//	b := []byte(expected.Content)
-//
-//	esa, err := NewAssertor(b)
-//	if err != nil {
-//		return fmt.Errorf("failed to create elasticsearch assertor: %w", err)
-//	}
-//
-//	ok := false
-//	for _, h := range c.ElasticsearchAPI.RequestHandlers {
-//		if h.Method == http.MethodPost && h.URL.Path == "/ons/_delete_by_query" {
-//			h.AssertCustom(esa)
-//			ok = true
-//			break
-//		}
-//	}
-//
-//	if err := waitForElasticsearchCall(WaitEventTimeout, esa); err != nil {
-//		return fmt.Errorf("error validating call to elasticsearch: %w", err)
-//	}
-//
-//	if !ok {
-//		return errors.New("no response defined for elasticsearch POST /ons/_delete_by_query")
-//	}
-//	return nil
-//}
+func (c *Component) thisDeleteRequestIsSentToElasticsearch(doc *godog.DocString) error {
+	expectedPath := strings.TrimSpace(doc.Content) // e.g. "/ons/_doc/some_deleted_uri"
 
-func (c *Component) thisDeleteQueryIsSentToElasticsearch(doc *godog.DocString) error {
-	expected := []byte(doc.Content)
-
-	esa, err := NewAssertor(expected)
+	assertor, err := NewAssertor([]byte(expectedPath))
 	if err != nil {
 		return fmt.Errorf("failed to create elasticsearch assertor: %w", err)
 	}
 
 	c.ElasticsearchAPI.NewHandler().
-		Post("/ons/_delete_by_query").
-		AssertCustom(esa)
+		Delete(expectedPath).
+		AssertCustom(assertor)
 
-	if err := waitForElasticsearchCall(WaitEventTimeout, esa); err != nil {
-		return fmt.Errorf("error validating delete-by-query call to elasticsearch: %w", err)
+	select {
+	case <-assertor.called:
+		return nil
+	case <-time.After(5 * time.Second):
+		return fmt.Errorf("expected DELETE call to %s but it was not received", expectedPath)
 	}
-	return nil
 }
 
 // waitForElasticsearchCall waits for a call to the provided Elasticsearch assessor, and it validates it against the expected body

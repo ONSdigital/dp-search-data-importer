@@ -191,12 +191,16 @@ components:
         type: object
         required:
         - uri
+        - search_index
         properties:
           uri:
             type: string
             description: URI of the upstream content item
             format: uri
             example: /economy/environmentalaccounts
+          search_index:
+            type: string
+            description: The search index from which the item should be deleted
           trace_id:
             type: string
             description: Trace ID for OTEL tracing

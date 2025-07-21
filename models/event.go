@@ -55,5 +55,7 @@ type PopulationType struct {
 }
 
 type DeleteEvent struct {
-	URI string `avro:"uri" json:"uri"`
+	URI         string `avro:"uri"`
+	SearchIndex string `avro:"search_index"`
+	TraceID     string `avro:"trace_id"`
 }

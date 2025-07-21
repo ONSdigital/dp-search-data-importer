@@ -177,38 +177,34 @@ func (h *BatchHandler) Delete(ctx context.Context, batch []kafka.Message) error 
 		events[i] = e
 	}
 	log.Info(ctx, "batch of delete events received", log.Data{"count": len(events)})
-
-	// Step 2: Perform individual delete-by-query per event
+	var errs []error
+	// Step 2: Perform individual delete by ID i.e URI per event
 	for _, event := range events {
-		query := map[string]interface{}{
-			"query": map[string]interface{}{
-				"term": map[string]interface{}{
-					"uri": event.URI,
-				},
-			},
-		}
+		log.Info(ctx, "processing delete event", log.Data{
+			"uri":          event.URI,
+			"search_index": event.SearchIndex,
+			"trace_id":     event.TraceID,
+		})
 
-		queryBytes, err := json.Marshal(query)
-		if err != nil {
-			return &Error{
-				err:     fmt.Errorf("failed to marshal delete query for uri %q: %w", event.URI, err),
-				logData: log.Data{"uri": event.URI},
-			}
+		if err := h.esClient.DeleteDocument(ctx, event.SearchIndex, event.URI); err != nil {
+			log.Error(ctx, "failed to delete document", err, log.Data{
+				"uri":          event.URI,
+				"search_index": event.SearchIndex,
+				"trace_id":     event.TraceID,
+			})
+			errs = append(errs, err)
+			continue
+		} else {
+			log.Info(ctx, "successfully deleted document",
+				log.Data{
+					"uri":          event.URI,
+					"search_index": event.SearchIndex,
+					"trace_id":     event.TraceID,
+				})
 		}
-
-		search := dpelasticsearch.Search{
-			Header: dpelasticsearch.Header{Index: "ons"},
-			Query:  queryBytes,
-		}
-
-		if err := h.esClient.DeleteDocumentByQuery(ctx, search); err != nil {
-			return &Error{
-				err:     fmt.Errorf("failed to delete document for uri %q: %w", event.URI, err),
-				logData: log.Data{"uri": event.URI},
-			}
-		}
-
-		log.Info(ctx, "successfully deleted document by uri", log.Data{"uri": event.URI})
+	}
+	if len(errs) > 0 {
+		return fmt.Errorf("one or more deletes failed: %v", errs)
 	}
 
 	return nil
