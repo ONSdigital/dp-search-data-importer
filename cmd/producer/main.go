@@ -28,7 +28,7 @@ type EventType int
 
 const (
 	EventTypeUnknown EventType = iota
-	EventTypeImport  EventType = iota
+	EventTypeImport
 	EventTypeDelete
 )
 
@@ -91,12 +91,12 @@ func createKafkaProducers(ctx context.Context, cfg *config.Config) (importKafkaP
 	}
 	importKafkaProducer, err := kafka.NewProducer(ctx, importProducerConfig)
 	if err != nil {
-		log.Fatal(ctx, "fatal error trying to create kafka producer", err, log.Data{"topic": cfg.Kafka.PublishedContentTopic})
+		log.Fatal(ctx, "fatal error trying to create kafka producer for import events", err, log.Data{"topic": cfg.Kafka.PublishedContentTopic})
 		os.Exit(1)
 	}
 	deleteKafkaProducer, err = kafka.NewProducer(ctx, deleteProducerConfig)
 	if err != nil {
-		log.Fatal(ctx, "fatal error trying to create kafka producer", err, log.Data{"topic": cfg.Kafka.PublishedContentTopic})
+		log.Fatal(ctx, "fatal error trying to create kafka producer for delete events", err, log.Data{"topic": cfg.Kafka.PublishedContentTopic})
 		os.Exit(1)
 	}
 
