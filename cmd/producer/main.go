@@ -13,6 +13,8 @@ import (
 	"github.com/ONSdigital/dp-search-data-importer/models"
 	"github.com/ONSdigital/dp-search-data-importer/schema"
 	"github.com/ONSdigital/log.go/v2/log"
+	"github.com/google/uuid"
+	"github.com/pkg/errors"
 )
 
 const serviceName = "dp-search-data-importer"
@@ -20,6 +22,14 @@ const serviceName = "dp-search-data-importer"
 const (
 	ZebedeeDataType = "legacy"
 	DatasetDataType = "datasets"
+)
+
+type EventType int
+
+const (
+	EventTypeUnknown EventType = iota
+	EventTypeImport  EventType = iota
+	EventTypeDelete
 )
 
 func main() {
@@ -33,54 +43,87 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Create Kafka Producer
-	pConfig := &kafka.ProducerConfig{
+	importKafkaProducer, deleteKafkaProducer := createKafkaProducers(ctx, cfg)
+
+	time.Sleep(500 * time.Millisecond)
+	scanner := bufio.NewScanner(os.Stdin)
+	for {
+		switch scanEventType(scanner) {
+		case EventTypeImport:
+			e := scanImportEvent(scanner)
+			sendImportEvent(ctx, e, importKafkaProducer)
+		case EventTypeDelete:
+			e := scanDeleteEvent(scanner)
+			sendDeleteEvent(ctx, e, deleteKafkaProducer)
+		default:
+			log.Fatal(ctx, "unknown event type", errors.New("unknown event type"))
+			os.Exit(1)
+		}
+	}
+}
+
+func createKafkaProducers(ctx context.Context, cfg *config.Config) (importKafkaProducer, deleteKafkaProducer *kafka.Producer) {
+	importProducerConfig := &kafka.ProducerConfig{
 		BrokerAddrs:     cfg.Kafka.Addr,
 		Topic:           cfg.Kafka.PublishedContentTopic,
 		KafkaVersion:    &cfg.Kafka.Version,
 		MaxMessageBytes: &cfg.Kafka.MaxBytes,
 	}
+	deleteProducerConfig := &kafka.ProducerConfig{
+		BrokerAddrs:     cfg.Kafka.Addr,
+		Topic:           cfg.Kafka.DeletedContentTopic,
+		KafkaVersion:    &cfg.Kafka.Version,
+		MaxMessageBytes: &cfg.Kafka.MaxBytes,
+	}
 	if cfg.Kafka.SecProtocol == config.KafkaTLSProtocol {
-		pConfig.SecurityConfig = kafka.GetSecurityConfig(
+		importProducerConfig.SecurityConfig = kafka.GetSecurityConfig(
+			cfg.Kafka.SecCACerts,
+			cfg.Kafka.SecClientCert,
+			cfg.Kafka.SecClientKey,
+			cfg.Kafka.SecSkipVerify,
+		)
+		deleteProducerConfig.SecurityConfig = kafka.GetSecurityConfig(
 			cfg.Kafka.SecCACerts,
 			cfg.Kafka.SecClientCert,
 			cfg.Kafka.SecClientKey,
 			cfg.Kafka.SecSkipVerify,
 		)
 	}
-	kafkaProducer, err := kafka.NewProducer(ctx, pConfig)
+	importKafkaProducer, err := kafka.NewProducer(ctx, importProducerConfig)
+	if err != nil {
+		log.Fatal(ctx, "fatal error trying to create kafka producer", err, log.Data{"topic": cfg.Kafka.PublishedContentTopic})
+		os.Exit(1)
+	}
+	deleteKafkaProducer, err = kafka.NewProducer(ctx, deleteProducerConfig)
 	if err != nil {
 		log.Fatal(ctx, "fatal error trying to create kafka producer", err, log.Data{"topic": cfg.Kafka.PublishedContentTopic})
 		os.Exit(1)
 	}
 
 	// kafka error logging go-routines
-	kafkaProducer.LogErrors(ctx)
+	importKafkaProducer.LogErrors(ctx)
+	deleteKafkaProducer.LogErrors(ctx)
 
-	time.Sleep(500 * time.Millisecond)
-	scanner := bufio.NewScanner(os.Stdin)
-	for {
-		e := scanEvent(scanner)
-		log.Info(ctx, "sending search data import event", log.Data{"searchDataImportEvent": e})
+	return importKafkaProducer, deleteKafkaProducer
+}
 
-		bytes, err := schema.SearchDataImportEvent.Marshal(e)
-		if err != nil {
-			log.Fatal(ctx, "search data import event error", err)
-			os.Exit(1)
-		}
-
-		// Send bytes to Output channel, after calling Initialise just in case it is not initialised.
-		err = kafkaProducer.Initialise(ctx)
-		if err != nil {
-			log.Fatal(ctx, "failed to initialise kafka producer", err)
-			os.Exit(1)
-		}
-		kafkaProducer.Channels().Output <- bytes
+func scanEventType(scanner *bufio.Scanner) EventType {
+	fmt.Println("Chose event type (i[mport]/d[elete])")
+	fmt.Printf("$ ")
+	scanner.Scan()
+	uid := strings.ToLower(scanner.Text())
+	switch uid {
+	case "i", "import":
+		return EventTypeImport
+	case "d", "delete":
+		return EventTypeDelete
+	default:
+		return EventTypeUnknown
 	}
 }
 
-// scanEvent creates a searchDataImport event according to the user input
-func scanEvent(scanner *bufio.Scanner) *models.SearchDataImport {
+// scanImportEvent creates a searchDataImport event according to the user input
+func scanImportEvent(scanner *bufio.Scanner) *models.SearchDataImport {
 	fmt.Println("--- [Send Kafka PublishedContent] ---")
 
 	fmt.Println("Type the UID")
@@ -179,4 +222,60 @@ func scanEvent(scanner *bufio.Scanner) *models.SearchDataImport {
 	}
 
 	return searchDataImport
+}
+
+func sendImportEvent(ctx context.Context, e *models.SearchDataImport, importKafkaProducer *kafka.Producer) {
+	log.Info(ctx, "sending search data import event", log.Data{"searchDataImportEvent": e})
+	eventData, err := schema.SearchDataImportEvent.Marshal(e)
+	if err != nil {
+		log.Fatal(ctx, "search data import event error", err)
+		os.Exit(1)
+	}
+	// Send bytes to Output channel, after calling Initialise just in case it is not initialised.
+	err = importKafkaProducer.Initialise(ctx)
+	if err != nil {
+		log.Fatal(ctx, "failed to initialise kafka producer", err)
+		os.Exit(1)
+	}
+	importKafkaProducer.Channels().Output <- eventData
+}
+
+func scanDeleteEvent(scanner *bufio.Scanner) *models.DeleteEvent {
+	fmt.Println("--- [Send Kafka Delete Event] ---")
+
+	fmt.Println("Type the URI to be deleted")
+	fmt.Printf("$ ")
+	scanner.Scan()
+	uri := scanner.Text()
+
+	fmt.Println("Type the search index (usually `ons`)")
+	fmt.Printf("$ ")
+	scanner.Scan()
+	index := scanner.Text()
+
+	traceID := uuid.NewString()
+
+	deleteEvent := models.DeleteEvent{
+		URI:         uri,
+		SearchIndex: index,
+		TraceID:     traceID,
+	}
+
+	return &deleteEvent
+}
+
+func sendDeleteEvent(ctx context.Context, e *models.DeleteEvent, deleteKafkaProducer *kafka.Producer) {
+	log.Info(ctx, "sending delete event", log.Data{"deleteEvent": e})
+	eventData, err := schema.SearchContentDeletedEvent.Marshal(e)
+	if err != nil {
+		log.Fatal(ctx, "search data import event error", err)
+		os.Exit(1)
+	}
+	// Send bytes to Output channel, after calling Initialise just in case it is not initialised.
+	err = deleteKafkaProducer.Initialise(ctx)
+	if err != nil {
+		log.Fatal(ctx, "failed to initialise kafka producer", err)
+		os.Exit(1)
+	}
+	deleteKafkaProducer.Channels().Output <- eventData
 }
