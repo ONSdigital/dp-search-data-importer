@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
 
 	dpelasticsearch "github.com/ONSdigital/dp-elasticsearch/v3/client"
 	kafka "github.com/ONSdigital/dp-kafka/v3"
@@ -180,13 +181,14 @@ func (h *BatchHandler) Delete(ctx context.Context, batch []kafka.Message) error 
 	var errs []error
 	// Step 2: Perform individual delete by ID i.e URI per event
 	for _, event := range events {
+		encodedID := url.PathEscape(event.URI)
 		log.Info(ctx, "processing delete event", log.Data{
 			"uri":          event.URI,
 			"search_index": event.SearchIndex,
 			"trace_id":     event.TraceID,
 		})
 
-		if err := h.esClient.DeleteDocument(ctx, event.SearchIndex, event.URI); err != nil {
+		if err := h.esClient.DeleteDocument(ctx, event.SearchIndex, encodedID); err != nil {
 			log.Error(ctx, "failed to delete document", err, log.Data{
 				"uri":          event.URI,
 				"search_index": event.SearchIndex,
