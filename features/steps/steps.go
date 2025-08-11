@@ -23,8 +23,7 @@ func (c *Component) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^nothing is sent to elasticsearch`, c.notingSentToElasticsearch)
 	ctx.Step(`^this model is sent to elasticsearch$`, c.thisModelIsSentToElasticsearch)
 	ctx.Step(`^this delete event is queued, to be consumed$`, c.thisDeleteEventIsQueued)
-	ctx.Step(`^this delete request is sent to elasticsearch$`, c.thisDeleteRequestIsSentToElasticsearch)
-
+	ctx.Step(`^this bulk delete is sent to elasticsearch for index "([^"]+)"$`, c.thisBulkDeleteIsSentToElasticsearchForIndex)
 }
 
 // theServiceStarts starts the service under test in a new go-routine
@@ -134,24 +133,34 @@ func (c *Component) thisDeleteEventIsQueued(eventDocString *godog.DocString) err
 	return nil
 }
 
-func (c *Component) thisDeleteRequestIsSentToElasticsearch(doc *godog.DocString) error {
-	expectedPath := strings.TrimSpace(doc.Content) // e.g. "/ons/_doc/some_deleted_uri"
+func (c *Component) thisBulkDeleteIsSentToElasticsearchForIndex(index string, doc *godog.DocString) error {
+	expectedLine := strings.TrimSpace(doc.Content) // e.g. {"delete":{"_id":"some_deleted_uri"}}
+	bulkPath := "/" + index + "/_bulk"
 
-	assertor, err := NewAssertor([]byte(expectedPath))
+	esa, err := NewAssertor([]byte(expectedLine))
 	if err != nil {
 		return fmt.Errorf("failed to create elasticsearch assertor: %w", err)
 	}
 
-	c.ElasticsearchAPI.NewHandler().
-		Delete(expectedPath).
-		AssertCustom(assertor)
-
-	select {
-	case <-assertor.called:
-		return nil
-	case <-time.After(5 * time.Second):
-		return fmt.Errorf("expected DELETE call to %s but it was not received", expectedPath)
+	// Attach to the existing POST /{index}/_bulk handler (set earlier by `elasticsearch returns...`)
+	ok := false
+	for _, h := range c.ElasticsearchAPI.RequestHandlers {
+		if h.Method == http.MethodPost && h.URL.Path == bulkPath {
+			h.AssertCustom(esa)
+			ok = true
+			break
+		}
 	}
+	if !ok {
+		return fmt.Errorf("no response defined for elasticsearch POST %s; "+
+			"add the step `elasticsearch returns the following response for bulk update` first", bulkPath)
+	}
+
+	if err := waitForElasticsearchCall(5*time.Second, esa); err != nil {
+		return fmt.Errorf("expected POST %s containing %s, but it was not received: %w",
+			bulkPath, expectedLine, err)
+	}
+	return nil
 }
 
 // waitForElasticsearchCall waits for a call to the provided Elasticsearch assessor, and it validates it against the expected body

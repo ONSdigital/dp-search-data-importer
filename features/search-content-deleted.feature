@@ -18,7 +18,7 @@ Feature: Search content deleted from elasticsearch
         "SearchIndex":"ons"
       }
     """
-    Then this delete request is sent to elasticsearch
+    Then this bulk delete is sent to elasticsearch for index "ons"
     """
-      /ons/_doc/some_deleted_uri
+      {"delete":{"_id":"some_deleted_uri"}}
     """

@@ -142,13 +142,15 @@ func TestPublishHandleWithInternalServerESResponse(t *testing.T) {
 }
 
 func TestDeleteHandleWithSuccess(t *testing.T) {
-	Convey("Given a batch handler with a successful ES delete", t, func() {
+	Convey("Given a batch handler with a successful ES bulk delete", t, func() {
 		mockES := &dpMock.ClientMock{
-			DeleteDocumentFunc: func(ctx context.Context, indexName, documentID string) error {
-				return nil
+			BulkUpdateFunc: func(ctx context.Context, indexName, url string, settings []byte) ([]byte, error) {
+				So(indexName, ShouldEqual, "ons")
+				So(len(settings), ShouldBeGreaterThan, 0)
+				resp := []byte(`{"took":1,"errors":false,"items":[{"delete":{"_index":"ons","_id":"/to/delete","status":200}}]}`)
+				return resp, nil
 			},
 		}
-
 		batchHandler := handler.NewBatchHandler(mockES, testCfg)
 
 		deleteEvent := models.DeleteEvent{URI: "/to/delete", SearchIndex: "ons"}
@@ -160,12 +162,14 @@ func TestDeleteHandleWithSuccess(t *testing.T) {
 		Convey("When Delete is called with a valid delete event", func() {
 			err := batchHandler.Delete(testContext, []kafka.Message{msg})
 
-			Convey("Then no error is returned", func() {
+			Convey("Then no error is returned and bulk was called once", func() {
 				So(err, ShouldBeNil)
-				So(mockES.DeleteDocumentCalls(), ShouldHaveLength, 1)
-				So(mockES.DeleteDocumentCalls()[0].IndexName, ShouldEqual, "ons")
-				So(mockES.DeleteDocumentCalls()[0].DocumentID, ShouldEqual, "/to/delete")
-
+				So(mockES.BulkUpdateCalls(), ShouldHaveLength, 1)
+				call := mockES.BulkUpdateCalls()[0]
+				So(call.IndexName, ShouldEqual, "ons")
+				// Body should include the delete action and the id
+				So(string(call.Settings), ShouldContainSubstring, `"delete"`)
+				So(string(call.Settings), ShouldContainSubstring, `"/to/delete"`)
 			})
 		})
 	})
@@ -181,26 +185,28 @@ func TestDeleteHandleWithUnmarshalError(t *testing.T) {
 		Convey("When Delete is called", func() {
 			err := batchHandler.Delete(testContext, []kafka.Message{badMsg})
 
-			Convey("Then an *Error is returned with unmarshal context", func() {
+			Convey("Then an *Error is returned with unmarshal context, and no bulk call is made", func() {
 				So(err, ShouldNotBeNil)
 				So(err.Error(), ShouldContainSubstring, "failed to unmarshal event")
 
 				typedErr, ok := err.(*handler.Error)
 				So(ok, ShouldBeTrue)
 				So(typedErr.LogData(), ShouldContainKey, "msg_data")
+
+				So(mockES.BulkUpdateCalls(), ShouldHaveLength, 0)
 			})
 		})
 	})
 }
 
 func TestDeleteHandleWithDeleteFails(t *testing.T) {
-	Convey("Given a batch handler where ES delete fails", t, func() {
+	Convey("Given a batch handler where ES bulk delete reports failures", t, func() {
 		mockES := &dpMock.ClientMock{
-			DeleteDocumentFunc: func(ctx context.Context, indexName, documentID string) error {
-				return errors.New("ES delete failed")
+			BulkUpdateFunc: func(ctx context.Context, indexName, url string, settings []byte) ([]byte, error) {
+				resp := []byte(`{"took":1,"errors":true,"items":[{"delete":{"_index":"ons","_id":"/fail/delete","status":500,"error":{"type":"boom","reason":"kaboom"}}}]}`)
+				return resp, nil
 			},
 		}
-
 		batchHandler := handler.NewBatchHandler(mockES, testCfg)
 
 		deleteEvent := models.DeleteEvent{URI: "/fail/delete", SearchIndex: "ons"}
@@ -212,13 +218,10 @@ func TestDeleteHandleWithDeleteFails(t *testing.T) {
 		Convey("When Delete is called", func() {
 			err := batchHandler.Delete(testContext, []kafka.Message{msg})
 
-			Convey("Then an *Error is returned and delete was attempted", func() {
+			Convey("Then an error is returned and bulk was attempted once", func() {
 				So(err, ShouldNotBeNil)
 				So(err.Error(), ShouldContainSubstring, "one or more deletes failed")
-
-				So(mockES.DeleteDocumentCalls(), ShouldHaveLength, 1)
-				So(mockES.DeleteDocumentCalls()[0].IndexName, ShouldEqual, "ons")
-				So(mockES.DeleteDocumentCalls()[0].DocumentID, ShouldEqual, "/fail/delete")
+				So(mockES.BulkUpdateCalls(), ShouldHaveLength, 1)
 			})
 		})
 	})
@@ -232,9 +235,9 @@ func TestDeleteHandleWithEmptyBatch(t *testing.T) {
 		Convey("When Delete is called", func() {
 			err := batchHandler.Delete(testContext, []kafka.Message{})
 
-			Convey("Then no error is returned and no delete is attempted", func() {
+			Convey("Then no error is returned and no bulk operation is attempted", func() {
 				So(err, ShouldBeNil)
-				So(mockES.DeleteDocumentCalls(), ShouldHaveLength, 0)
+				So(mockES.BulkUpdateCalls(), ShouldHaveLength, 0)
 			})
 		})
 	})

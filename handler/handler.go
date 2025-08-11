@@ -160,52 +160,96 @@ func (h *BatchHandler) Delete(ctx context.Context, batch []kafka.Message) error 
 		return nil
 	}
 
+	// Unmarshal all delete events
 	events := make([]*models.DeleteEvent, len(batch))
 	s := schema.SearchContentDeletedEvent
-
-	// Step 1: Unmarshal all delete events
 	for i, msg := range batch {
 		e := &models.DeleteEvent{}
 		if err := s.Unmarshal(msg.GetData(), e); err != nil {
 			return &Error{
-				err: fmt.Errorf("failed to unmarshal event: %w", err),
-				logData: map[string]interface{}{
-					"msg_data": string(msg.GetData()),
-				},
+				err:     fmt.Errorf("failed to unmarshal event: %w", err),
+				logData: map[string]interface{}{"msg_data": string(msg.GetData())},
 			}
 		}
 		events[i] = e
 	}
 	log.Info(ctx, "batch of delete events received", log.Data{"count": len(events)})
-	var errs []error
-	// Step 2: Perform individual delete by ID i.e URI per event
-	for _, event := range events {
-		log.Info(ctx, "processing delete event", log.Data{
-			"uri":          event.URI,
-			"search_index": event.SearchIndex,
-			"trace_id":     event.TraceID,
-		})
 
-		if err := h.esClient.DeleteDocument(ctx, event.SearchIndex, event.URI); err != nil {
-			log.Error(ctx, "failed to delete document", err, log.Data{
-				"uri":          event.URI,
-				"search_index": event.SearchIndex,
-				"trace_id":     event.TraceID,
-			})
-			errs = append(errs, err)
-			continue
-		} else {
-			log.Info(ctx, "successfully deleted document",
-				log.Data{
-					"uri":          event.URI,
-					"search_index": event.SearchIndex,
-					"trace_id":     event.TraceID,
-				})
+	// Build bulk delete body
+	bulkBody, err := buildBulkDeleteBody(events)
+	if err != nil {
+		log.Error(ctx, "failed to build bulk delete body", err)
+		return err
+	}
+	if len(bulkBody) == 0 {
+		log.Info(ctx, "no valid delete actions to send (empty bulk body)")
+		return nil
+	}
+
+	// Send bulk request to Elasticsearch
+	jsonResp, err := h.esClient.BulkUpdate(ctx, esDestIndex, h.esURL, bulkBody)
+	if err != nil {
+		if jsonResp == nil {
+			log.Error(ctx, "server error while sending bulk delete", err)
+			return err
+		}
+		log.Warn(ctx, "error in response from elasticsearch while sending bulk delete", log.FormatErrors([]error{err}))
+	}
+
+	var bulkRes models.EsBulkResponse
+	if err := json.Unmarshal(jsonResp, &bulkRes); err != nil {
+		log.Error(ctx, "error unmarshalling bulk delete response", err)
+		return err
+	}
+
+	total := len(events)
+	success, failures := 0, 0
+	for _, item := range bulkRes.Items {
+		res := item["delete"]
+		switch res.Status {
+		case 200, 404:
+			success++
+		default:
+			failures++
+			log.Error(ctx, "error deleting doc in ES bulk", fmt.Errorf("status %d", res.Status),
+				log.Data{"response.id": res.ID, "response.status": res.Status, "response.error": res.Error})
 		}
 	}
-	if len(errs) > 0 {
-		return fmt.Errorf("one or more deletes failed: %v", errs)
+
+	log.Info(ctx, "bulk deletes sent to elasticsearch", log.Data{
+		"documents_received": total,
+		"documents_success":  success,
+		"documents_failed":   failures,
+	})
+
+	if failures > 0 {
+		return fmt.Errorf("one or more deletes failed: %d of %d", failures, total)
+	}
+	return nil
+}
+
+// Build the delete payload to be sent to elastic search.
+func buildBulkDeleteBody(events []*models.DeleteEvent) ([]byte, error) {
+	type del struct {
+		ID string `json:"_id"`
+	}
+	type action struct {
+		Delete del `json:"delete"`
 	}
 
-	return nil
+	avgLineSize := 60
+	body := make([]byte, 0, len(events)*avgLineSize)
+
+	for _, e := range events {
+		if e == nil || e.URI == "" {
+			continue
+		}
+		line, err := json.Marshal(action{Delete: del{ID: e.URI}})
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal bulk delete line for id %q: %w", e.URI, err)
+		}
+		body = append(body, line...)
+		body = append(body, '\n')
+	}
+	return body, nil
 }
