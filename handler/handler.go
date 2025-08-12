@@ -57,7 +57,24 @@ func (h *BatchHandler) Publish(ctx context.Context, batch []kafka.Message) error
 
 		events[i] = e
 	}
-	log.Info(ctx, "batch of events received", log.Data{"len": len(events)})
+
+	// Summarise what we received (avoid dumping entire structs)
+	summaries := make([]map[string]interface{}, 0, len(events))
+	for _, e := range events {
+		if e == nil {
+			summaries = append(summaries, map[string]interface{}{"error": "nil event"})
+			continue
+		}
+		summaries = append(summaries, map[string]interface{}{
+			"uri":          e.URI,
+			"search_index": e.SearchIndex,
+			"trace_id":     e.TraceID,
+		})
+	}
+	log.Info(ctx, "batch of events received", log.Data{
+		"count":  len(events),
+		"events": summaries,
+	})
 
 	// send batch to elasticsearch
 	err := h.sendToES(ctx, events)
@@ -173,7 +190,24 @@ func (h *BatchHandler) Delete(ctx context.Context, batch []kafka.Message) error 
 		}
 		events[i] = e
 	}
-	log.Info(ctx, "batch of delete events received", log.Data{"count": len(events)})
+
+	// Summarise what we received (avoid dumping entire structs)
+	summaries := make([]map[string]interface{}, 0, len(events))
+	for _, e := range events {
+		if e == nil {
+			summaries = append(summaries, map[string]interface{}{"error": "nil event"})
+			continue
+		}
+		summaries = append(summaries, map[string]interface{}{
+			"uri":          e.URI,
+			"search_index": e.SearchIndex,
+			"trace_id":     e.TraceID,
+		})
+	}
+	log.Info(ctx, "batch of delete events received", log.Data{
+		"count":  len(events),
+		"events": summaries,
+	})
 
 	// Build bulk delete body
 	bulkBody, err := buildBulkDeleteBody(events)
