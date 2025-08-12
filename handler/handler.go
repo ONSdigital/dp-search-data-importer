@@ -58,26 +58,10 @@ func (h *BatchHandler) Publish(ctx context.Context, batch []kafka.Message) error
 		events[i] = e
 	}
 
-	// Summarise what we received (avoid dumping entire structs)
-	summaries := make([]map[string]interface{}, 0, len(events))
-	for _, e := range events {
-		if e == nil {
-			summaries = append(summaries, map[string]interface{}{"error": "nil event"})
-			continue
-		}
-		summaries = append(summaries, map[string]interface{}{
-			"uri":          e.URI,
-			"search_index": e.SearchIndex,
-			"trace_id":     e.TraceID,
-		})
-	}
-	log.Info(ctx, "batch of events received", log.Data{
-		"count":  len(events),
-		"events": summaries,
-	})
+	log.Info(ctx, "batch of update events received", log.Data{"len": len(events)})
 
 	// send batch to elasticsearch
-	err := h.sendToES(ctx, events)
+	err := h.sendUpdateBatchToES(ctx, events)
 	if err != nil {
 		log.Error(ctx, "failed to send event to Elastic Search", err)
 		return err
@@ -87,7 +71,7 @@ func (h *BatchHandler) Publish(ctx context.Context, batch []kafka.Message) error
 }
 
 // Preparing the payload and sending bulk events to elastic search.
-func (h *BatchHandler) sendToES(ctx context.Context, events []*models.SearchDataImport) error {
+func (h *BatchHandler) sendUpdateBatchToES(ctx context.Context, events []*models.SearchDataImport) error {
 
 	log.Info(ctx, "bulk events into ES starts")
 	target := len(events)
@@ -107,6 +91,7 @@ func (h *BatchHandler) sendToES(ctx context.Context, events []*models.SearchData
 			continue
 		}
 		bulkupsert = append(bulkupsert, upsertBulkRequestBody...)
+		log.Info(ctx, "added update event to batch", log.Data{"URI": event.URI, "index": event.SearchIndex, "trace_id": event.TraceID})
 	}
 
 	jsonUpsertResponse, err := h.esClient.BulkUpdate(ctx, esDestIndex, h.esURL, bulkupsert)
@@ -191,26 +176,10 @@ func (h *BatchHandler) Delete(ctx context.Context, batch []kafka.Message) error 
 		events[i] = e
 	}
 
-	// Summarise what we received (avoid dumping entire structs)
-	summaries := make([]map[string]interface{}, 0, len(events))
-	for _, e := range events {
-		if e == nil {
-			summaries = append(summaries, map[string]interface{}{"error": "nil event"})
-			continue
-		}
-		summaries = append(summaries, map[string]interface{}{
-			"uri":          e.URI,
-			"search_index": e.SearchIndex,
-			"trace_id":     e.TraceID,
-		})
-	}
-	log.Info(ctx, "batch of delete events received", log.Data{
-		"count":  len(events),
-		"events": summaries,
-	})
+	log.Info(ctx, "batch of delete events received", log.Data{"len": len(events)})
 
 	// Build bulk delete body
-	bulkBody, err := buildBulkDeleteBody(events)
+	bulkBody, err := buildBulkDeleteBody(ctx, events)
 	if err != nil {
 		log.Error(ctx, "failed to build bulk delete body", err)
 		return err
@@ -263,7 +232,7 @@ func (h *BatchHandler) Delete(ctx context.Context, batch []kafka.Message) error 
 }
 
 // Build the delete payload to be sent to elastic search.
-func buildBulkDeleteBody(events []*models.DeleteEvent) ([]byte, error) {
+func buildBulkDeleteBody(ctx context.Context, events []*models.DeleteEvent) ([]byte, error) {
 	type del struct {
 		ID string `json:"_id"`
 	}
@@ -284,6 +253,8 @@ func buildBulkDeleteBody(events []*models.DeleteEvent) ([]byte, error) {
 		}
 		body = append(body, line...)
 		body = append(body, '\n')
+
+		log.Info(ctx, "added delete event to batch", log.Data{"URI": e.URI, "index": e.SearchIndex, "trace_id": e.TraceID})
 	}
 	return body, nil
 }
