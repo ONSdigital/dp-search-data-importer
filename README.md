@@ -1,9 +1,10 @@
-dp-search-data-importer
+# dp-search-data-importer
+
 ================
 
 Service to store searchable content into elasticsearch. See [search service architecture docs here](https://github.com/ONSdigital/dp-search-api/tree/develop/architecture#search-service-architecture)
 
-### Getting started
+## Getting started
 
 * Run `make help` to see full list of make targets
 * Run `make debug`
@@ -11,15 +12,27 @@ Service to store searchable content into elasticsearch. See [search service arch
 The service runs in the background consuming messages from Kafka.
 An example event can be created using the helper script, `make produce`.
 
-### Dependencies
+## Dependencies
 
 * Requires running…
-	* go v1.19
-	* ElasticSearch 7.10
-	* [kafka](https://github.com/ONSdigital/dp/blob/main/guides/INSTALLING.md#prerequisites)
+  * go v1.19
+  * ElasticSearch 7.10
+  * [kafka](https://github.com/ONSdigital/dp/blob/main/guides/INSTALLING.md#prerequisites)
 * No further dependencies other than those defined in `go.mod`
 
-### Configuration
+### Tools
+
+To run some of our tests you will need additional tooling:
+
+#### Audit
+
+We use `dis-vulncheck` to do auditing, which you will [need to install](https://github.com/ONSdigital/dis-vulncheck).
+
+#### Linting
+
+We use v2 of golangci-lint, which you will [need to install](https://golangci-lint.run/docs/welcome/install).
+
+## Configuration
 
 | Environment variable         | Default                                              | Description                                                                                                        |
 |------------------------------|------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
@@ -39,16 +52,16 @@ An example event can be created using the helper script, `make produce`.
 | KAFKA_SEC_CLIENT_KEY         | unset                                                | PEM for the client key [1]                                                                                         |
 | KAFKA_SEC_CLIENT_CERT        | unset                                                | PEM for the client certificate [1]                                                                                 |
 | KAFKA_SEC_SKIP_VERIFY        | false                                                | ignores server certificate issues if true [1]                                                                      |
-| ELASTIC_SEARCH_URL           | "http://localhost:11200"                             | The elastic search URL                                                                                             |
+| ELASTIC_SEARCH_URL           | <http://localhost:11200>                             | The elastic search URL                                                                                             |
 | AWS_REGION                   | "eu-west-2"                                          | The default AWS region to be validated while connecting to elastic search                                          |
 | AWS_SERVICE                  | "es"                                                 | The default AWS service to be validated while connecting to elastic search                                         |
-| SIGN_ELASTICSEARCH_REQUESTS  | false                                                | The default configuration for AWS authenticatioin while connecting to elastic search                               |
+| SIGN_ELASTICSEARCH_REQUESTS  | false                                                | The default configuration for AWS authentication while connecting to elastic search                               |
 
-**Notes:**
+### Notes
 
-1. <a name="notes_1">For more info, see the [kafka TLS examples documentation](https://github.com/ONSdigital/dp-kafka/tree/main/examples#tls)</a>
+1. For more info, see the [kafka TLS examples documentation](https://github.com/ONSdigital/dp-kafka/tree/main/examples#tls)
 
-### Healthcheck
+## Healthcheck
 
  The `/health` endpoint returns the current status of the service. Dependent services are health checked on an interval defined by the `HEALTHCHECK_INTERVAL` environment variable.
 
@@ -56,11 +69,11 @@ An example event can be created using the helper script, `make produce`.
 
  `curl localhost:25900/health`
 
-### Contributing
+## Contributing
 
 See [CONTRIBUTING](CONTRIBUTING.md) for details.
 
-### License
+## License
 
 Copyright © 2024, [Office for National Statistics](https://www.ons.gov.uk)
 
