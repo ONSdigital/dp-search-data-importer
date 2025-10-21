@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	dpelasticsearch "github.com/ONSdigital/dp-elasticsearch/v3/client"
-	dpkafka "github.com/ONSdigital/dp-kafka/v3"
+	dpkafka "github.com/ONSdigital/dp-kafka/v4"
 	"github.com/ONSdigital/dp-search-data-importer/config"
 	"github.com/ONSdigital/dp-search-data-importer/handler"
 	"github.com/ONSdigital/log.go/v2/log"

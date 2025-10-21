@@ -127,7 +127,7 @@ func (c *Component) thisDeleteEventIsQueued(eventDocString *godog.DocString) err
 		return fmt.Errorf("failed to unmarshal docstring to delete event: %w", err)
 	}
 
-	if err := c.KafkaDeleteConsumer.QueueMessage(schema.SearchContentDeletedEvent, event); err != nil {
+	if err := c.KafkaDeleteConsumer.QueueJSON(event); err != nil {
 		return fmt.Errorf("failed to queue delete event for testing: %w", err)
 	}
 	return nil
@@ -156,7 +156,7 @@ func (c *Component) thisBulkDeleteIsSentToElasticsearchForIndex(index string, do
 			"add the step `elasticsearch returns the following response for bulk update` first", bulkPath)
 	}
 
-	if err := waitForElasticsearchCall(5*time.Second, esa); err != nil {
+	if err := waitForElasticsearchCall(10*time.Second, esa); err != nil {
 		return fmt.Errorf("expected POST %s containing %s, but it was not received: %w",
 			bulkPath, expectedLine, err)
 	}

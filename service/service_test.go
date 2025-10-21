@@ -10,8 +10,8 @@ import (
 
 	dpESClient "github.com/ONSdigital/dp-elasticsearch/v3/client"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	kafka "github.com/ONSdigital/dp-kafka/v3"
-	"github.com/ONSdigital/dp-kafka/v3/kafkatest"
+	kafka "github.com/ONSdigital/dp-kafka/v4"
+	"github.com/ONSdigital/dp-kafka/v4/kafkatest"
 	"github.com/ONSdigital/dp-search-data-importer/config"
 	"github.com/ONSdigital/dp-search-data-importer/service"
 	"github.com/ONSdigital/dp-search-data-importer/service/mock"

@@ -14,8 +14,8 @@ Feature: Search content deleted from elasticsearch
     And this delete event is queued, to be consumed
     """
       {
-        "URI":"some_deleted_uri",
-        "SearchIndex":"ons"
+        "uri":"some_deleted_uri",
+        "search_index":"ons"
       }
     """
     Then this bulk delete is sent to elasticsearch for index "ons"

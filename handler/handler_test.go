@@ -2,12 +2,13 @@ package handler_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"testing"
 
 	dpMock "github.com/ONSdigital/dp-elasticsearch/v3/client/mocks"
-	kafka "github.com/ONSdigital/dp-kafka/v3"
-	"github.com/ONSdigital/dp-kafka/v3/kafkatest"
+	kafka "github.com/ONSdigital/dp-kafka/v4"
+	"github.com/ONSdigital/dp-kafka/v4/kafkatest"
 	"github.com/ONSdigital/dp-search-data-importer/config"
 	"github.com/ONSdigital/dp-search-data-importer/handler"
 	"github.com/ONSdigital/dp-search-data-importer/models"
@@ -154,7 +155,7 @@ func TestDeleteHandleWithSuccess(t *testing.T) {
 		batchHandler := handler.NewBatchHandler(mockES, testCfg)
 
 		deleteEvent := models.DeleteEvent{URI: "/to/delete", SearchIndex: "ons"}
-		msgBytes, err := schema.SearchContentDeletedEvent.Marshal(&deleteEvent)
+		msgBytes, err := json.Marshal(&deleteEvent)
 		So(err, ShouldBeNil)
 		msg, err := kafkatest.NewMessage(msgBytes, 1)
 		So(err, ShouldBeNil)
@@ -210,7 +211,7 @@ func TestDeleteHandleWithDeleteFails(t *testing.T) {
 		batchHandler := handler.NewBatchHandler(mockES, testCfg)
 
 		deleteEvent := models.DeleteEvent{URI: "/fail/delete", SearchIndex: "ons"}
-		msgBytes, err := schema.SearchContentDeletedEvent.Marshal(&deleteEvent)
+		msgBytes, err := json.Marshal(&deleteEvent)
 		So(err, ShouldBeNil)
 		msg, err := kafkatest.NewMessage(msgBytes, 1)
 		So(err, ShouldBeNil)

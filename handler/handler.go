@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	dpelasticsearch "github.com/ONSdigital/dp-elasticsearch/v3/client"
-	kafka "github.com/ONSdigital/dp-kafka/v3"
+	kafka "github.com/ONSdigital/dp-kafka/v4"
 	"github.com/ONSdigital/dp-search-data-importer/config"
 	"github.com/ONSdigital/dp-search-data-importer/models"
 	"github.com/ONSdigital/dp-search-data-importer/schema"
@@ -164,10 +164,9 @@ func (h *BatchHandler) Delete(ctx context.Context, batch []kafka.Message) error 
 
 	// Unmarshal all delete events
 	events := make([]*models.DeleteEvent, len(batch))
-	s := schema.SearchContentDeletedEvent
 	for i, msg := range batch {
 		e := &models.DeleteEvent{}
-		if err := s.Unmarshal(msg.GetData(), e); err != nil {
+		if err := json.Unmarshal(msg.GetData(), e); err != nil {
 			return &Error{
 				err:     fmt.Errorf("failed to unmarshal event: %w", err),
 				logData: map[string]interface{}{"msg_data": string(msg.GetData())},

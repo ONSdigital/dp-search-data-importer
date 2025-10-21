@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	kafka "github.com/ONSdigital/dp-kafka/v3"
+	kafka "github.com/ONSdigital/dp-kafka/v4"
 	"github.com/ONSdigital/dp-search-data-importer/config"
 	"github.com/ONSdigital/dp-search-data-importer/models"
 	"github.com/ONSdigital/dp-search-data-importer/schema"
@@ -226,18 +226,18 @@ func scanImportEvent(scanner *bufio.Scanner) *models.SearchDataImport {
 
 func sendImportEvent(ctx context.Context, e *models.SearchDataImport, importKafkaProducer *kafka.Producer) {
 	log.Info(ctx, "sending search data import event", log.Data{"searchDataImportEvent": e})
-	eventData, err := schema.SearchDataImportEvent.Marshal(e)
-	if err != nil {
-		log.Fatal(ctx, "search data import event error", err)
-		os.Exit(1)
-	}
+
 	// Send bytes to Output channel, after calling Initialise just in case it is not initialised.
-	err = importKafkaProducer.Initialise(ctx)
+	err := importKafkaProducer.Initialise(ctx)
 	if err != nil {
 		log.Fatal(ctx, "failed to initialise kafka producer", err)
 		os.Exit(1)
 	}
-	importKafkaProducer.Channels().Output <- eventData
+
+	if err := importKafkaProducer.Send(ctx, schema.SearchDataImportEvent, e); err != nil {
+		log.Fatal(ctx, "failed to send search data import event", err)
+		os.Exit(1)
+	}
 }
 
 func scanDeleteEvent(scanner *bufio.Scanner) *models.DeleteEvent {
@@ -266,16 +266,16 @@ func scanDeleteEvent(scanner *bufio.Scanner) *models.DeleteEvent {
 
 func sendDeleteEvent(ctx context.Context, e *models.DeleteEvent, deleteKafkaProducer *kafka.Producer) {
 	log.Info(ctx, "sending delete event", log.Data{"deleteEvent": e})
-	eventData, err := schema.SearchContentDeletedEvent.Marshal(e)
-	if err != nil {
-		log.Fatal(ctx, "search data import event error", err)
-		os.Exit(1)
-	}
+
 	// Send bytes to Output channel, after calling Initialise just in case it is not initialised.
-	err = deleteKafkaProducer.Initialise(ctx)
+	err := deleteKafkaProducer.Initialise(ctx)
 	if err != nil {
 		log.Fatal(ctx, "failed to initialise kafka producer", err)
 		os.Exit(1)
 	}
-	deleteKafkaProducer.Channels().Output <- eventData
+
+	if err := deleteKafkaProducer.SendJSON(ctx, e); err != nil {
+		log.Fatal(ctx, "failed to send search content deleted event", err)
+		os.Exit(1)
+	}
 }
