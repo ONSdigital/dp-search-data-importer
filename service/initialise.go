@@ -8,7 +8,7 @@ import (
 	dpES "github.com/ONSdigital/dp-elasticsearch/v3"
 	dpESClient "github.com/ONSdigital/dp-elasticsearch/v3/client"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	kafka "github.com/ONSdigital/dp-kafka/v4"
+	kafka "github.com/ONSdigital/dp-kafka/v5"
 	dpawsauth "github.com/ONSdigital/dp-net/v3/awsauth"
 	dphttp "github.com/ONSdigital/dp-net/v3/http"
 	"github.com/ONSdigital/dp-search-data-importer/config"
