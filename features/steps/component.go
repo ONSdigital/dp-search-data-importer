@@ -11,8 +11,6 @@ import (
 	"time"
 
 	componenttest "github.com/ONSdigital/dp-component-test"
-	kafka "github.com/ONSdigital/dp-kafka/v4"
-	"github.com/ONSdigital/dp-kafka/v4/kafkatest"
 	"github.com/ONSdigital/dp-search-data-importer/config"
 	"github.com/ONSdigital/dp-search-data-importer/service"
 	"github.com/ONSdigital/log.go/v2/log"
@@ -31,19 +29,18 @@ var (
 
 type Component struct {
 	componenttest.ErrorFeature
-	ElasticsearchAPI     *httpfake.HTTPFake // Elasticsearch API mock at HTTP level
-	KafkaPublishConsumer *kafkatest.Consumer
-	KafkaDeleteConsumer  *kafkatest.Consumer
-	errorChan            chan error
-	svc                  *service.Service
-	cfg                  *config.Config
-	wg                   *sync.WaitGroup
-	signals              chan os.Signal
-	waitEventTimeout     time.Duration
-	ctx                  context.Context
+	ElasticsearchAPI *httpfake.HTTPFake // Elasticsearch API mock at HTTP level
+	errorChan        chan error
+	svc              *service.Service
+	cfg              *config.Config
+	wg               *sync.WaitGroup
+	signals          chan os.Signal
+	waitEventTimeout time.Duration
+	ctx              context.Context
+	kakfkaScenario   *componenttest.KafkaScenario
 }
 
-func NewComponent(t *testing.T) *Component {
+func NewComponent(t *testing.T, kafkaScenario *componenttest.KafkaScenario) *Component {
 	c := &Component{
 		ElasticsearchAPI: httpfake.New(
 			httpfake.WithTesting(t),
@@ -52,8 +49,9 @@ func NewComponent(t *testing.T) *Component {
 		waitEventTimeout: WaitEventTimeout,
 		wg:               &sync.WaitGroup{},
 		ctx:              context.Background(),
+		kakfkaScenario:   kafkaScenario,
 	}
-	service.GetKafkaConsumer = c.GetKafkaConsumer
+
 	return c
 }
 
@@ -71,6 +69,10 @@ func (c *Component) initService(ctx context.Context) error {
 
 	cfg.HealthCheckInterval = time.Second
 	cfg.ElasticSearchAPIURL = c.ElasticsearchAPI.ResolveURL("")
+
+	cfg.Kafka.PublishedContentTopic = c.kakfkaScenario.GetMappedTopic("search-data-import")
+	cfg.Kafka.DeletedContentTopic = c.kakfkaScenario.GetMappedTopic("search-content-deleted")
+	cfg.Kafka.Addr = c.kakfkaScenario.KafkaFeature.GetBrokers(ctx)
 
 	log.Info(ctx, "config used by component tests", log.Data{"cfg": cfg})
 
@@ -133,50 +135,4 @@ func (c *Component) Reset() error {
 	c.ElasticsearchAPI.Reset()
 
 	return nil
-}
-
-// GetKafkaConsumer creates a new kafkatest consumer and stores it to the caller Component struct
-// It returns the mock, so it can be used by the service under test.
-// If there is any error creating the mock, it is also returned to the service.
-func (c *Component) GetKafkaConsumer(ctx context.Context, cfg *config.Kafka, topic, group string) (kafka.IConsumerGroup, error) {
-	switch topic {
-	case cfg.PublishedContentTopic:
-		var err error
-		c.KafkaPublishConsumer, err = kafkatest.NewConsumer(
-			c.ctx,
-			&kafka.ConsumerGroupConfig{
-				BrokerAddrs:       cfg.Addr,
-				Topic:             topic,
-				GroupName:         group,
-				MinBrokersHealthy: &cfg.ConsumerMinBrokersHealthy,
-				KafkaVersion:      &cfg.Version,
-			},
-			nil,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create publish kafkatest consumer: %w", err)
-		}
-		return c.KafkaPublishConsumer.Mock, nil
-
-	case cfg.DeletedContentTopic:
-		var err error
-		c.KafkaDeleteConsumer, err = kafkatest.NewConsumer(
-			c.ctx,
-			&kafka.ConsumerGroupConfig{
-				BrokerAddrs:       cfg.Addr,
-				Topic:             topic,
-				GroupName:         group,
-				MinBrokersHealthy: &cfg.ConsumerMinBrokersHealthy,
-				KafkaVersion:      &cfg.Version,
-			},
-			nil,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create delete kafkatest consumer: %w", err)
-		}
-		return c.KafkaDeleteConsumer.Mock, nil
-
-	default:
-		return nil, fmt.Errorf("unexpected topic: %s", topic)
-	}
 }

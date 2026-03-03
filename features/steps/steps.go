@@ -1,15 +1,12 @@
 package steps
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/ONSdigital/dp-search-data-importer/models"
-	"github.com/ONSdigital/dp-search-data-importer/schema"
 	"github.com/cucumber/godog"
 	"github.com/google/go-cmp/cmp"
 )
@@ -19,10 +16,8 @@ func (c *Component) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^elasticsearch is healthy`, c.elasticSearchIsHealthy)
 	ctx.Step(`^elasticsearch is unhealthy`, c.elasticSearchIsUnhealthy)
 	ctx.Step(`^elasticsearch returns the following response for bulk update$`, c.elasticsearchReturns)
-	ctx.Step(`^this search-data-import event is queued, to be consumed$`, c.thisSearchDataImportEventIsQueued)
 	ctx.Step(`^nothing is sent to elasticsearch`, c.notingSentToElasticsearch)
 	ctx.Step(`^this model is sent to elasticsearch$`, c.thisModelIsSentToElasticsearch)
-	ctx.Step(`^this delete event is queued, to be consumed$`, c.thisDeleteEventIsQueued)
 	ctx.Step(`^this bulk delete is sent to elasticsearch for index "([^"]+)"$`, c.thisBulkDeleteIsSentToElasticsearchForIndex)
 }
 
@@ -104,31 +99,6 @@ func (c *Component) notingSentToElasticsearch() error {
 
 	if err := waitNoElasticsearchCall(WaitEventTimeout, esa); err != nil {
 		return fmt.Errorf("error validating that nothing was sent to elasticsearch: %w", err)
-	}
-	return nil
-}
-
-// thisSearchDataImportEventIsQueued produces a new SearchDataImport event with the contents defined by the input
-func (c *Component) thisSearchDataImportEventIsQueued(eventDocString *godog.DocString) error {
-	event := &models.SearchDataImport{}
-	if err := json.Unmarshal([]byte(eventDocString.Content), event); err != nil {
-		return fmt.Errorf("failed to unmarshal docstring to search data import event: %w", err)
-	}
-
-	if err := c.KafkaPublishConsumer.QueueMessage(schema.SearchDataImportEvent, event); err != nil {
-		return fmt.Errorf("failed to queue event for testing: %w", err)
-	}
-	return nil
-}
-
-func (c *Component) thisDeleteEventIsQueued(eventDocString *godog.DocString) error {
-	event := &models.DeleteEvent{}
-	if err := json.Unmarshal([]byte(eventDocString.Content), event); err != nil {
-		return fmt.Errorf("failed to unmarshal docstring to delete event: %w", err)
-	}
-
-	if err := c.KafkaDeleteConsumer.QueueJSON(event); err != nil {
-		return fmt.Errorf("failed to queue delete event for testing: %w", err)
 	}
 	return nil
 }

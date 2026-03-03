@@ -11,7 +11,7 @@ Feature: Search content deleted from elasticsearch
       }
     """
     When the service starts
-    And this delete event is queued, to be consumed
+    And this "search-content-deleted" event is queued, to be consumed:
     """
       {
         "uri":"some_deleted_uri",

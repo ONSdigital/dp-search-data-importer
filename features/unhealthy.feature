@@ -5,7 +5,7 @@ Feature: Search data importer unhealthy
     Given elasticsearch is unhealthy
 
     When the service starts
-    And this search-data-import event is queued, to be consumed
+    And this "search-data-import" Avro event is queued, to be consumed:
     """
       {
         "URI":       "some_uri",

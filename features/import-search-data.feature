@@ -13,7 +13,7 @@ Feature: Search data imported to elasticsearch
     """
 
     When the service starts
-    And this search-data-import event is queued, to be consumed
+    And this "search-data-import" Avro event is queued, to be consumed:
     """
       {
         "UID":       "cphi01-timeseries",
