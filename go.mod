@@ -3,7 +3,7 @@ module github.com/ONSdigital/dp-search-data-importer
 go 1.26.0
 
 require (
-	github.com/ONSdigital/dp-component-test v1.4.0-alpha
+	github.com/ONSdigital/dp-component-test v1.4.1-alpha
 	github.com/ONSdigital/dp-elasticsearch/v3 v3.0.4
 	github.com/ONSdigital/dp-healthcheck v1.6.4
 	github.com/ONSdigital/dp-kafka/v5 v5.1.0

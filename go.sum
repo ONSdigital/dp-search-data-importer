@@ -14,6 +14,8 @@ github.com/ONSdigital/dp-authorisation/v2 v2.32.3 h1:Tx0uTo/P5oXyYTNqw5m+nKxe+7H
 github.com/ONSdigital/dp-authorisation/v2 v2.32.3/go.mod h1:uDDkQ/HeqeirqXBCVrvyGxbKSO/bKe80wW7V226sB+g=
 github.com/ONSdigital/dp-component-test v1.4.0-alpha h1:vjE1EgpPdOjbP929JPJ274hdn2fVHn+c3BSW0W9eX6k=
 github.com/ONSdigital/dp-component-test v1.4.0-alpha/go.mod h1:r0ePYPyy7xJhN18d0bxKbq84fnR2TDYzB9kAMLJZ43Q=
+github.com/ONSdigital/dp-component-test v1.4.1-alpha h1:nO0p6JPmQLgyJhpC6g+DgMjIAeKDdnM/8udWji62Acs=
+github.com/ONSdigital/dp-component-test v1.4.1-alpha/go.mod h1:r0ePYPyy7xJhN18d0bxKbq84fnR2TDYzB9kAMLJZ43Q=
 github.com/ONSdigital/dp-elasticsearch/v3 v3.0.4 h1:oVIHABqkeCoiqCYU+DTvbFPxS7OsQJz6AGjgoMW9Gqk=
 github.com/ONSdigital/dp-elasticsearch/v3 v3.0.4/go.mod h1://nUUkUDDOoMzfHPrgGOKaTHsj5oWIdMDmbdE70yeec=
 github.com/ONSdigital/dp-healthcheck v1.6.4 h1:FhWOuVmob36dYq7AzCdbgyf0Vk58IFitSl8y8pWJ8ck=
