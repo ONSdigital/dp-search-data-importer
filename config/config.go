@@ -70,7 +70,7 @@ func Get() (*Config, error) {
 			PublishedContentTopic:     "search-data-import",
 			DeletedContentTopic:       "search-content-deleted",
 			Addr:                      []string{"localhost:9092", "localhost:9093", "localhost:9094"},
-			Version:                   "1.0.2",
+			Version:                   "3.8.0",
 			OffsetOldest:              true,
 			NumWorkers:                1,
 			SecProtocol:               "",

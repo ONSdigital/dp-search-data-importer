@@ -43,7 +43,7 @@ func TestConfig(t *testing.T) {
 				So(cfg.Kafka.SecClientKey, ShouldEqual, "")
 				So(cfg.Kafka.SecProtocol, ShouldEqual, "")
 				So(cfg.Kafka.SecSkipVerify, ShouldBeFalse)
-				So(cfg.Kafka.Version, ShouldEqual, "1.0.2")
+				So(cfg.Kafka.Version, ShouldEqual, "3.8.0")
 				So(cfg.SignElasticsearchRequests, ShouldEqual, false)
 				So(cfg.StopConsumingOnUnhealthy, ShouldBeTrue)
 			})
