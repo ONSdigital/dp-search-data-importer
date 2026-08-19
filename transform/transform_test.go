@@ -37,11 +37,6 @@ func TestTransformEventModelToEsModel(t *testing.T) {
 					Date:         "test-date",
 				},
 			},
-			PopulationType: models.PopulationType{
-				Name:   "test-name",
-				Label:  "test-label",
-				AggKey: "test-name###test-label",
-			},
 			Dimensions: []models.Dimension{
 				{
 					Name:     "dim1",
@@ -81,11 +76,6 @@ func TestTransformEventModelToEsModel(t *testing.T) {
 						ChangeNotice: "test-notice",
 						Date:         "test-date",
 					},
-				},
-				PopulationType: &models.EsPopulationType{
-					Name:   "test-name",
-					Label:  "test-label",
-					AggKey: "test-name###test-label",
 				},
 				Dimensions: []models.EsDimension{
 					{

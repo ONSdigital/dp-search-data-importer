@@ -21,12 +21,6 @@ Feature: Search data imported to elasticsearch
         "DatasetID": "cphi01",
         "Edition":   "timeseries",
         "DataType":  "cantabular",
-        "PopulationType": {
-          "Key": "pop-label",
-          "AggKey": "pop-label###Pop Label",
-          "Name":  "popName",
-          "Label": "Pop Label"
-        },
         "Dimensions": [
           {
             "Key": "label-1",
@@ -63,12 +57,6 @@ Feature: Search data imported to elasticsearch
           "finalised":false,
           "published":false,
           "canonical_topic":"",
-          "population_type": {
-            "key": "pop-label",
-            "agg_key": "pop-label###Pop Label",
-            "name":  "popName",
-            "label": "Pop Label"
-          },
           "dimensions": [
  		        {
               "key": "label-1",

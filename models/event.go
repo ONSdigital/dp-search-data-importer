@@ -25,7 +25,6 @@ type SearchDataImport struct {
 	Published       bool                 `avro:"published"`
 	Language        string               `avro:"language"`
 	Survey          string               `avro:"survey"`
-	PopulationType  PopulationType       `avro:"population_type"`
 	Dimensions      []Dimension          `avro:"dimensions"`
 }
 
@@ -43,15 +42,6 @@ type Dimension struct {
 	Name     string `avro:"name"`
 	Label    string `avro:"label"`
 	RawLabel string `avro:"raw_label"`
-}
-
-// PopulationType represents the population type name (unique ID) and label
-// and an aggregation key which combines name and label
-type PopulationType struct {
-	Key    string `avro:"key"`
-	AggKey string `avro:"agg_key"`
-	Name   string `avro:"name"`
-	Label  string `avro:"label"`
 }
 
 // DeleteEvent represents a delete event

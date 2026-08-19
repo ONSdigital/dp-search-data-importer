@@ -176,18 +176,7 @@ func scanImportEvent(scanner *bufio.Scanner) *models.SearchDataImport {
 	}
 
 	if dataType == DatasetDataType {
-		popType := models.PopulationType{}
 		dimensions := []models.Dimension{}
-
-		fmt.Println("Type the population type Name")
-		fmt.Printf("$ ")
-		scanner.Scan()
-		popType.Name = scanner.Text()
-
-		fmt.Println("Type the population type Label")
-		fmt.Printf("$ ")
-		scanner.Scan()
-		popType.Label = scanner.Text()
 
 		for {
 			fmt.Println("Add dimension? [Yy] to confirm")
@@ -217,7 +206,6 @@ func scanImportEvent(scanner *bufio.Scanner) *models.SearchDataImport {
 			dimensions = append(dimensions, dim)
 		}
 
-		searchDataImport.PopulationType = popType
 		searchDataImport.Dimensions = dimensions
 	}
 

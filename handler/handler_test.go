@@ -45,10 +45,6 @@ var (
 		Survey:          "",
 		Language:        "",
 		CanonicalTopic:  "",
-		PopulationType: models.PopulationType{
-			Name:  "pop1",
-			Label: "popLbl1",
-		},
 		Dimensions: []models.Dimension{
 			{Name: "dim1", Label: "dimLbl1", RawLabel: "dimRawLbl1"},
 		},
