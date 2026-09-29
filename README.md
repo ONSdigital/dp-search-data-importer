@@ -1,7 +1,5 @@
 # dp-search-data-importer
 
-================
-
 Service to store searchable content into elasticsearch. See [search service architecture docs here](https://github.com/ONSdigital/dp-search-api/tree/develop/architecture#search-service-architecture)
 
 ## Getting started
@@ -15,7 +13,7 @@ An example event can be created using the helper script, `make produce`.
 ## Dependencies
 
 * Requires running…
-  * go v1.19
+  * go v1.26
   * ElasticSearch 7.10
   * [kafka](https://github.com/ONSdigital/dp/blob/main/guides/INSTALLING.md#prerequisites)
 * No further dependencies other than those defined in `go.mod`
