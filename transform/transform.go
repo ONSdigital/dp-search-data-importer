@@ -23,6 +23,7 @@ func (t *Transform) TransformEventModelToEsModel(eventModel *models.SearchDataIm
 		DataType:        eventModel.DataType,
 		Edition:         eventModel.Edition,
 		URI:             eventModel.URI,
+		PreviousURIs:    eventModel.PreviousURIs,
 		JobID:           eventModel.JobID,
 		SearchIndex:     eventModel.SearchIndex,
 		CDID:            eventModel.CDID,

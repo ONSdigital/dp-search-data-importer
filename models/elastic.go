@@ -4,6 +4,7 @@ package models
 type EsModel struct {
 	DataType        string              `json:"type"`
 	URI             string              `json:"uri"`
+	PreviousURIs    []string            `json:"previous_uris,omitempty"`
 	JobID           string              `json:"job_id"`
 	SearchIndex     string              `json:"search_index"`
 	CDID            string              `json:"cdid"`

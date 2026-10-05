@@ -1,6 +1,7 @@
 package handler_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -94,6 +95,28 @@ func TestPublishHandleWithEventsCreated(t *testing.T) {
 			})
 		})
 	})
+}
+
+func TestPublishPreservesPreviousURIs(t *testing.T) {
+	event := *expectedEvent1
+	event.PreviousURIs = []string{"/economy/environmentalaccounts/datasets/teststaticdataset"}
+	elasticSearchMock := &dpMock.ClientMock{
+		BulkUpdateFunc: func(context.Context, string, string, []byte) ([]byte, error) {
+			return mockSuccessESResponseWithNoError, nil
+		},
+	}
+
+	batchHandler := handler.NewBatchHandler(elasticSearchMock, testCfg)
+	encoded, err := schema.SearchDataImportEvent.Marshal(&event)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := batchHandler.Publish(testContext, []kafka.Message{kafkatest.NewMessage(encoded)}); err != nil {
+		t.Fatal(err)
+	}
+	if calls := elasticSearchMock.BulkUpdateCalls(); len(calls) != 1 || !bytes.Contains(calls[0].Settings, []byte(`"previous_uris":["/economy/environmentalaccounts/datasets/teststaticdataset"]`)) {
+		t.Fatalf("bulk update did not include previous URIs: %v", calls)
+	}
 }
 
 func TestPublishHandleWithEventsUpdated(t *testing.T) {

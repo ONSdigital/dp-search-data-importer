@@ -48,7 +48,8 @@ var searchDataImportEvent = `{
         { "name": "label", "type": "string", "default": "" },
         { "name": "raw_label", "type": "string", "default": "" }
       ]
-    }}}
+    }}},
+    {"name": "previous_uris", "type": {"type":"array","items":"string"}, "default": []}
   ]
 }`
 
