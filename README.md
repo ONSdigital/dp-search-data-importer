@@ -13,7 +13,7 @@ An example event can be created using the helper script, `make produce`.
 ## Dependencies
 
 * Requires running…
-  * go v1.26
+  * go v1.27
   * ElasticSearch 7.10
   * [kafka](https://github.com/ONSdigital/dp/blob/main/guides/INSTALLING.md#prerequisites)
 * No further dependencies other than those defined in `go.mod`

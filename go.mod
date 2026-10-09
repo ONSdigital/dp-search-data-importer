@@ -1,6 +1,6 @@
 module github.com/ONSdigital/dp-search-data-importer
 
-go 1.26.0
+go 1.27.0
 
 require (
 	github.com/ONSdigital/dp-component-test v1.4.8
